@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cmath>
 #include "./../../occupancygrid/grid/grid.h"
-#include "./../../pngwriter/png_writer.h"
+#include "./../../ppmwriter/ppm_writer.h"
 
 class HoughGrid
 {
@@ -28,7 +28,7 @@ class HoughGrid
     int getThetaSums(int* sums);
     
     void sendHoughToImage(char* filename);
-    void setImagePixel(PngWriter* w, int x, int y, int val);
+    void setImagePixel(PPMwriter* w, int val);
 };
 
 #endif // HOUGHGRID_H

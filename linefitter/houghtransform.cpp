@@ -33,10 +33,12 @@ double HoughTransform::getXCardinal(){
 
 
 void HoughTransform::performHoughTransform(){
+  char cur;
+  
   //generate hough transform grid
   for (int i=0; i<Grid::GRID_SIZE; i++){
     for (int j=0; j<Grid::GRID_SIZE; j++){
-      char cur = this->grid->grid->map[j*Grid::GRID_SIZE + i];
+      cur = this->grid->grid->map[j*Grid::GRID_SIZE + i];
       if (cur < 0) this->houghGrid->addHoughPoint(i,j);
     }
   }

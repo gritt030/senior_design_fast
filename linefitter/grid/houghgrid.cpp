@@ -65,7 +65,7 @@ int HoughGrid::getThetaSums(int* sums){
 
 
 void HoughGrid::sendHoughToImage(char* filename){
-  PngWriter* w = new PngWriter();
+  PPMwriter* w = new PPMwriter();
   unsigned char curByte;
   
   w->create_image(filename, THETA_SIZE, RADIUS_SIZE*8);
@@ -75,14 +75,14 @@ void HoughGrid::sendHoughToImage(char* filename){
     for (int j=0; j<RADIUS_SIZE; j++){
       curByte = this->map[i*RADIUS_SIZE + j];
 
-      setImagePixel(w, i, j*8, curByte & 0x01);
-      setImagePixel(w, i, j*8+1, (curByte >> 1) & 0x01);
-      setImagePixel(w, i, j*8+2, (curByte >> 2) & 0x01);
-      setImagePixel(w, i, j*8+3, (curByte >> 3) & 0x01);
-      setImagePixel(w, i, j*8+4, (curByte >> 4) & 0x01);
-      setImagePixel(w, i, j*8+5, (curByte >> 5) & 0x01);
-      setImagePixel(w, i, j*8+6, (curByte >> 6) & 0x01);
-      setImagePixel(w, i, j*8+7, (curByte >> 7) & 0x01);
+      setImagePixel(w, curByte & 0x01);
+      setImagePixel(w, (curByte >> 1) & 0x01);
+      setImagePixel(w, (curByte >> 2) & 0x01);
+      setImagePixel(w, (curByte >> 3) & 0x01);
+      setImagePixel(w, (curByte >> 4) & 0x01);
+      setImagePixel(w, (curByte >> 5) & 0x01);
+      setImagePixel(w, (curByte >> 6) & 0x01);
+      setImagePixel(w, (curByte >> 7) & 0x01);
     }
   }
   
@@ -91,18 +91,16 @@ void HoughGrid::sendHoughToImage(char* filename){
 }
 
 
-void HoughGrid::setImagePixel(PngWriter* w, int x, int y, int val){
+void HoughGrid::setImagePixel(PPMwriter* w, int val){
   int color;
   
   //open map square
   if (val > 0) {
-    color = 0x008800ff;
+    w->write_pixel(0x00, 0x88, 0x00);
   
   //unknown map square
   } else {
-    color = 0x808080ff;
+    w->write_pixel(0x80, 0x80, 0x80);
   }
-  
-  w->set_pixel(x, y, color);
 }
 

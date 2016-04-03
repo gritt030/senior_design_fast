@@ -7,12 +7,11 @@ add_executable(quadcopter main.cpp)
 
 install(TARGETS quadcopter RUNTIME DESTINATION bin)
 
-add_subdirectory(pngwriter)
 add_subdirectory(occupancygrid)
 add_subdirectory(localization)
-add_subdirectory(navigation)
 add_subdirectory(sonar)
 add_subdirectory(linefitter)
+add_subdirectory(ppmwriter)
 
-target_link_libraries(quadcopter navigation_map navigate localizer line_fitter occupancy_grid sonar png_writer -lpng -lz)
+target_link_libraries(quadcopter localizer line_fitter occupancy_grid sonar ppm_writer)
 

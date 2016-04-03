@@ -47,13 +47,14 @@ void LsdLineFitter::generateLsdImage(){
   if (SCALE != 1.0) size = (int)(size*SCALE) + 1;
   
   this->lsdimage = new LsdGrid(size);
+  this->LSD_GRID_SIZE = size;
   
   //copy input image without scaling it
   if (SCALE == 1.0) {
     char cur;
     for (int i=0; i<Grid::GRID_SIZE; i++){
       for (int j=0; j<Grid::GRID_SIZE; j++){
-        cur = this->inimage->getValue(i,j);
+        cur = this->inimage->map[j*Grid::GRID_SIZE + i];
         if (cur < 0)
           this->lsdimage->setValue(i,j,(unsigned char)1);
         else
@@ -69,13 +70,13 @@ void LsdLineFitter::generateLsdImage(){
     
     for (int i=0; i<Grid::GRID_SIZE; i++){
       for (int j=0; j<Grid::GRID_SIZE; j++){
-        cur = this->inimage->getValue(i,j);
+        cur = this->inimage->map[j*Grid::GRID_SIZE + i];
         if (cur < 0) {
           this->lsdimage->setValue((int)(i*SCALE),(int)(j*SCALE),(unsigned char)1);
         } else {
           x = (int)(i*SCALE);
           y = (int)(j*SCALE);
-          curL = this->lsdimage->getValue(x,y);
+          curL = this->lsdimage->getValue(i,j);
           if (curL != 1)
             this->lsdimage->setValue(x,y,UNDEFINED);
         }
@@ -87,9 +88,11 @@ void LsdLineFitter::generateLsdImage(){
 
 //set all wall pixels to have a gradient of 0 degrees
 void LsdLineFitter::gradientImageX(){
-  for (int i=0; i<lsdimage->GRID_SIZE; i++){
-    for (int j=0; j<lsdimage->GRID_SIZE; j++){
-      unsigned char cur = lsdimage->getValue(i,j);
+  unsigned char cur;
+  
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      cur = this->lsdimage->map[j*LSD_GRID_SIZE + i];
       if (cur != UNDEFINED)
         lsdimage->setValue(i,j,(unsigned char)0);
     }
@@ -99,9 +102,11 @@ void LsdLineFitter::gradientImageX(){
 
 //set all wall pixels to have a gradient of 90 degrees
 void LsdLineFitter::gradientImageY(){
-  for (int i=0; i<lsdimage->GRID_SIZE; i++){
-    for (int j=0; j<lsdimage->GRID_SIZE; j++){
-      unsigned char cur = lsdimage->getValue(i,j);
+  unsigned char cur;
+  
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      cur = this->lsdimage->map[j*LSD_GRID_SIZE + i];
       if (cur != UNDEFINED)
         lsdimage->setValue(i,j,(unsigned char)128);
     }
@@ -109,13 +114,11 @@ void LsdLineFitter::gradientImageY(){
 }
 
 
-void LsdLineFitter::detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newGrid){
+void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGrid){
   this->setImage(grid->grid);
   
   this->generateLsdImage();
   this->gradientImageX();
-  
-  this->sendLsdToImage("/home/owner/pics/pics/lsd.png");
   
   unsigned char curVal;
   Region* curRegion;
@@ -123,16 +126,13 @@ void LsdLineFitter::detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newG
   
   std::cout << lsdimage->GRID_SIZE << std::endl;
   
-  for (int i=0; i<lsdimage->GRID_SIZE; i++){
-    for (int j=0; j<lsdimage->GRID_SIZE; j++){
-      curVal = lsdimage->getValue(i,j);
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      curVal = this->lsdimage->map[j*LSD_GRID_SIZE + i];
       
       if (curVal != UNDEFINED){
-        //std::cout << "    grow\n";
         curRegion = regionGrow(i,j);
-        //std::cout << "    2rect\n";
         curRect = regionToRect(curRegion);
-        //std::cout << "    refine\n";
         refineRect(curRect, curRegion);
         
         if (SCALE != 1.0) {
@@ -149,14 +149,7 @@ void LsdLineFitter::detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newG
         
         double curLen = dist(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
         
-        //std::cout << "    draw\n";
         if ((isAligned(curRect->theta, 0.0)) && (curLen >= LENGTH)){
-//           for (int k=0; k<curRegion->size; k++){
-//             newGrid->grid->setValue(curRegion->xVals[k],
-//                                     curRegion->yVals[k],
-//                                     (char)-10);
-//           }
-          
           double dx = curRect->x2 - curRect->x1;
           double cx = dx/fabs(dx);
           double dy = curRect->y2 - curRect->y1;
@@ -184,24 +177,13 @@ void LsdLineFitter::detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newG
     }
   }
   
-  ///////
-  detectLineSegmentsY(grid, newGrid);
-}
-
-
-void LsdLineFitter::detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newGrid){
-//   this->setImage(grid->grid);
-//   
-//   this->generateLsdImage();
+  
+  //vertical lines
   this->gradientImageY();
     
-  unsigned char curVal;
-  Region* curRegion;
-  Rect* curRect;
-    
-  for (int i=0; i<lsdimage->GRID_SIZE; i++){
-    for (int j=0; j<lsdimage->GRID_SIZE; j++){
-      curVal = lsdimage->getValue(i,j);
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      curVal = this->lsdimage->map[j*LSD_GRID_SIZE + i];
       
       if (curVal != UNDEFINED){
         curRegion = regionGrow(i,j);
@@ -223,12 +205,135 @@ void LsdLineFitter::detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newG
         double curLen = dist(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
         
         if ((isAligned(curRect->theta, 1.570796327)) && (curLen >= LENGTH)){
-//           for (int k=0; k<curRegion->size; k++){
-//             newGrid->grid->setValue(curRegion->xVals[k],
-//                                     curRegion->yVals[k],
-//                                     (char)-10);
-//           }
+          double dx = curRect->x2 - curRect->x1;
+          double cx = dx/fabs(dx);
+          double dy = curRect->y2 - curRect->y1;
+          double cy = dy/fabs(dy);
+          double slope = dx/dy;
           
+          double x = curRect->x1;
+          double y = curRect->y1;
+          
+          for (double l=0.0; l<=fabs(dy); l+=1.0){
+            newGrid->grid->setValue((int)x, (int)y, (char)-10);
+            y += cy;
+            x = (y - curRect->y1) * slope + curRect->x1;
+          }
+          
+        } else {
+          for (int k=0; k<curRegion->size; k++){
+            lsdimage->setValue(curRegion->xVals[k],curRegion->yVals[k],curRegion->angle);
+          }
+        }
+        
+        delete curRect;
+        deleteRegion(curRegion);
+      }
+    }
+  }
+}
+
+
+void LsdLineFitter::detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newGrid){
+  this->setImage(grid->grid);
+  
+  this->generateLsdImage();
+  this->gradientImageX();
+  
+  unsigned char curVal;
+  Region* curRegion;
+  Rect* curRect;
+  
+  std::cout << lsdimage->GRID_SIZE << std::endl;
+  
+  //horizontal lines
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      curVal = this->lsdimage->map[j*LSD_GRID_SIZE + i];
+      
+      if (curVal != UNDEFINED){
+        curRegion = regionGrow(i,j);
+        curRect = regionToRect(curRegion);
+        refineRect(curRect, curRegion);
+        
+        if (SCALE != 1.0) {
+          (curRect->x) /= SCALE;
+          (curRect->y) /= SCALE;
+          (curRect->x1) /= SCALE;
+          (curRect->x2) /= SCALE;
+          (curRect->y1) /= SCALE;
+          (curRect->y2) /= SCALE;
+          (curRect->width) /= SCALE;
+          (curRect->dx) /= SCALE;
+          (curRect->dy) /= SCALE;
+        }
+        
+        double curLen = dist(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
+        
+        if ((isAligned(curRect->theta, 0.0)) && (curLen >= LENGTH)){
+          double dx = curRect->x2 - curRect->x1;
+          double cx = dx/fabs(dx);
+          double dy = curRect->y2 - curRect->y1;
+          double cy = dy/fabs(dy);
+          double slope = dy/dx;
+                    
+          double x = curRect->x1;
+          double y = curRect->y1;
+          
+          for (double l=0.0; l<=fabs(dx); l+=1.0){
+            newGrid->grid->setValue((int)x, (int)y, (char)-10);
+            x += cx;
+            y = (x - curRect->x1) * slope + curRect->y1;
+          }
+          
+        } else {
+          for (int k=0; k<curRegion->size; k++){
+            lsdimage->setValue(curRegion->xVals[k],curRegion->yVals[k],curRegion->angle);
+          }
+        }
+        
+        delete curRect;
+        deleteRegion(curRegion);
+      }
+    }
+  }
+}
+
+
+void LsdLineFitter::detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newGrid){
+  this->setImage(grid->grid);
+  
+  this->generateLsdImage();
+  this->gradientImageY();
+    
+  unsigned char curVal;
+  Region* curRegion;
+  Rect* curRect;
+    
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      curVal = this->lsdimage->map[j*LSD_GRID_SIZE + i];
+      
+      if (curVal != UNDEFINED){
+        curRegion = regionGrow(i,j);
+        curRect = regionToRect(curRegion);
+        refineRect(curRect, curRegion);
+        
+        if (SCALE != 1.0) {
+          (curRect->x) /= SCALE;
+          (curRect->y) /= SCALE;
+          (curRect->x1) /= SCALE;
+          (curRect->x2) /= SCALE;
+          (curRect->y1) /= SCALE;
+          (curRect->y2) /= SCALE;
+          (curRect->width) /= SCALE;
+          (curRect->dx) /= SCALE;
+          (curRect->dy) /= SCALE;
+        }
+        
+        double curLen = dist(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
+        
+        if ((isAligned(curRect->theta, 1.570796327)) && (curLen >= LENGTH)){
           double dx = curRect->x2 - curRect->x1;
           double cx = dx/fabs(dx);
           double dy = curRect->y2 - curRect->y1;
@@ -260,91 +365,9 @@ void LsdLineFitter::detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newG
 
 
 
-// //grow a rectangular region
-// LsdLineFitter::Region* LsdLineFitter::regionGrow(int x, int y){
-//   int xx,yy,i;
-//   unsigned char curAngle;
-//   
-//   int regSize;
-//   unsigned char regAngle;
-//   PointList* ptList = new PointList;
-//   PointList* curPt = ptList;
-//   PointList* iterPt = ptList;
-// 
-//   //first point of the region
-//   regSize = 1;
-//   ptList->x = x;
-//   ptList->y = y;
-//   ptList->value = lsdimage->getValue(x, y);
-//   lsdimage->setValue(x,y,UNDEFINED);
-//   
-//   //angle of region
-//   regAngle = ptList->value;
-// 
-//   //try neighbors of existing region points as new points in region
-//   for(i=0; i<regSize; i++) {
-//     for (xx=(iterPt->x-1); xx<=(iterPt->x+1); xx++){
-//       for (yy=(iterPt->y-1); yy<=(iterPt->y+1); yy++){
-//         //get current pixel value
-//         curAngle = lsdimage->getValue(xx,yy);
-//         
-//         //current pixel is edge and part of region
-//         if (curAngle != UNDEFINED) {
-//           //add point to pointlist
-//           PointList* pt = new PointList;
-//           pt->x = xx;
-//           pt->y = yy;
-//           pt->value = curAngle;
-//           lsdimage->setValue(xx,yy,UNDEFINED);
-//           curPt->next = pt;
-//           curPt = pt;
-//           
-//           //increment size of region
-//           regSize++;
-//         }
-//       }
-//     }
-//     
-//     //move to next point in pointlist
-//     iterPt = iterPt->next;
-//   }
-//   
-//   //create region to return
-//   Region* reg = new Region;
-//   reg->angle = regAngle;
-//   reg->size = regSize;
-//   reg->xVals = new int[regSize];
-//   reg->yVals = new int[regSize];
-//   
-//   iterPt = ptList;
-//   
-//   for (i=0; i<regSize; i++){
-//     //add point to region
-//     reg->xVals[i] = iterPt->x;
-//     reg->yVals[i] = iterPt->y;
-//     
-//     //delete point in linked list
-//     ptList = iterPt->next;
-//     delete iterPt;
-//     iterPt = ptList;
-//   }
-//   
-//   //return new region
-//   return reg;
-// }
-
-
-
-
-
-
-
-
-
-
 //grow a rectangular region
 LsdLineFitter::Region* LsdLineFitter::regionGrow(int x, int y){
-  int xx,yy,i;
+  int xx,yy,i, dx,dy;
   unsigned char curAngle;
   
   int regSize;
@@ -357,7 +380,7 @@ LsdLineFitter::Region* LsdLineFitter::regionGrow(int x, int y){
   regSize = 1;
   ptList->x = x;
   ptList->y = y;
-  ptList->value = lsdimage->getValue(x, y);
+  ptList->value = this->lsdimage->map[y*LSD_GRID_SIZE + x];
   lsdimage->setValue(x,y,UNDEFINED);
   
   //angle of region
@@ -367,7 +390,10 @@ LsdLineFitter::Region* LsdLineFitter::regionGrow(int x, int y){
   for(i=0; i<regSize; i++) {
     for (xx=(iterPt->x-1); xx<=(iterPt->x+1); xx++){
       for (yy=(iterPt->y-1); yy<=(iterPt->y+1); yy++){
-        if ((abs(yy - y) > 50) || (abs(xx - x) > 50)) continue;
+        
+//         dx = abs(x - xx);
+//         dy = abs(y - yy);
+//         if ((dx > 50) || (dy > 50)) continue;
         
         //get current pixel value
         curAngle = lsdimage->getValue(xx,yy);
@@ -416,19 +442,6 @@ LsdLineFitter::Region* LsdLineFitter::regionGrow(int x, int y){
   //return new region
   return reg;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //returns whether or not two angles are aligned according to the set threshold
@@ -621,15 +634,15 @@ void LsdLineFitter::rectImprove(){
 
 
 void LsdLineFitter::sendLsdToImage(char* filename){
-  PngWriter* w = new PngWriter();
+  PPMwriter* w = new PPMwriter();
   int size = this->lsdimage->GRID_SIZE;
   
   w->create_image(filename, size, size);
   
   for (int i=0; i<size; i++){
     for (int j=0; j<size; j++) {
-      unsigned char cur = lsdimage->getValue(i, j);
-      setLsdImagePixel(w, i, j, cur);
+      unsigned char cur = lsdimage->getValue(j, i);
+      setLsdImagePixel(w, cur);
     }
   }
   
@@ -638,18 +651,14 @@ void LsdLineFitter::sendLsdToImage(char* filename){
 }
 
 
-void LsdLineFitter::setLsdImagePixel(PngWriter* w, int x, int y, unsigned char value){
-  int color;
-  
+void LsdLineFitter::setLsdImagePixel(PPMwriter* w, unsigned char value){
   //open map square
   if (value != UNDEFINED) {
-    color = 0xff0000ff;
+    w->write_pixel(0xff, 0x00, 0x00);
   
   //unknown map square
   } else {
-    color = 0x808080ff;
+    w->write_pixel(0x80, 0x80, 0x80);
   }
-  
-  w->set_pixel(x, y, color);
 }
 

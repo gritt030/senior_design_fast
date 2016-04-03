@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "./../pngwriter/png_writer.h"
+#include "./../ppmwriter/ppm_writer.h"
 #include "./../occupancygrid/occupancygrid.h"
 #include "./../occupancygrid/grid/grid.h"
 #include "grid/lsdgrid.h"
@@ -14,6 +14,7 @@ public:
   //image pointers
   Grid* inimage = nullptr;
   Grid* outimage = nullptr;
+  int LSD_GRID_SIZE;
   
   static const unsigned char UNDEFINED = LsdGrid::UNDEFINED;
   static const int LENGTH = 10;
@@ -36,11 +37,12 @@ public:
   
   void setImage(Grid* input);
   
+  void detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGrid);
   void detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newGrid);
   void detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newGrid);
   
   void sendLsdToImage(char* filename);
-  void setLsdImagePixel(PngWriter* w, int x, int y, unsigned char value);
+  void setLsdImagePixel(PPMwriter* w, unsigned char value);
   
   
 private:
@@ -92,25 +94,3 @@ private:
 
 #endif // LSDLINEFITTER_H
 
-/*
-
-    @param n_bins      Number of bins used in the pseudo-ordering of gradient
-                       modulus.
-                       Suggested value: 1024
-
-
-    @return            A double array of size 7 x n_out, containing the list
-                       of line segments detected. The array contains first
-                       7 values of line segment number 1, then the 7 values
-                       of line segment number 2, and so on, and it finish
-                       by the 7 values of line segment number n_out.
-                       The seven values are:
-                       - x1,y1,x2,y2,width,p,-log10(NFA)
-                       .
-                       for a line segment from coordinates (x1,y1) to (x2,y2),
-                       a width 'width', an angle precision of p in (0,1) given
-                       by angle_tolerance/180 degree, and NFA value 'NFA'.
-                       If 'out' is the returned pointer, the 7 values of
-                       line segment number 'n+1' are obtained with
-                       'out[7*n+0]' to 'out[7*n+6]'.
-*/

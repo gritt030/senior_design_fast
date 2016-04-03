@@ -12,22 +12,19 @@
 #include "occupancygrid/occupancygrid.h"
 #include "localization/coordinatereader.h"
 #include "localization/localizer.h"
-#include "navigation/virtualenvironment.h"
 #include "sonar/sonararchive.h"
-#include "navigation/navigationmap/navigationmap.h"
 #include "linefitter/lsdlinefitter.h"
 #include "linefitter/houghtransform.h"
+#include "ppmwriter/ppm_writer.h"
 
-#include "pngwriter/png_writer.h"
 
-
-int main(int argc, char **argv) {
+int main(int argc, char **argv) {  
   if (argc != 2) {std::cout << "More args please!\n"; return 0;}
   
-  char* occImg = "/home/owner/pics/pics/occupancy.png";
-  char* sorImg = "/home/owner/pics/pics/refined.png";
-  char* rawImg = "/home/owner/pics/pics/rawnav.png";
-  char* navImg = "/home/owner/pics/pics/navigate.png";
+  char* occImg = "/home/owner/pics/pics/occupancy.ppm";
+  char* sorImg = "/home/owner/pics/pics/refined.ppm";
+  char* rawImg = "/home/owner/pics/pics/rawnav.ppm";
+  char* navImg = "/home/owner/pics/pics/navigate.ppm";
   //char* coordFile = "/home/owner/workspace/Datasets/output_ds3/coordsEstimate.txt";
   char* coordFile = (char*)argv[1];
   
@@ -35,14 +32,7 @@ int main(int argc, char **argv) {
   
   r->updateCoordsFile();  //use file for maps
   
-  /*//use virtual environment for maps
-  r->updateCoordsVirtual(buf1);
-  //*/
-  
   Localizer* l = new Localizer(r);
-  
-  NavigationMap* g = new NavigationMap();
-  //OccupancyGrid* g = new OccupancyGrid();
   
   SonarArchive* a = new SonarArchive();
   
@@ -109,7 +99,7 @@ int main(int argc, char **argv) {
   
   std::cout << "Generating occupancy grid..." << std::endl;
   OccupancyGrid* orig = a->generateMap();
-  //orig->sendToImage(navImg, 0,0);
+  ////orig->sendToImage(navImg, 0,0);
   
   HoughTransform* hough = new HoughTransform(orig);
   double rotation = hough->getYCardinal();
@@ -120,7 +110,7 @@ int main(int argc, char **argv) {
   
   delete orig;
   orig = a->generateMap();
-  //orig->sendToImage(sorImg, 0,0);
+  ////orig->sendToImage(sorImg, 0,0);
   
   
   OccupancyGrid* o1 = new OccupancyGrid();
@@ -132,18 +122,20 @@ int main(int argc, char **argv) {
   orig->getOpenMap(o2);
   std::cout << "Begin LSD...\n";
   LsdLineFitter* lsd = new LsdLineFitter();
-  lsd->detectLineSegmentsX(o1, o2);
+  //lsd->detectLineSegmentsX(o1, o2);
+  lsd->detectLineSegments(o1, o2);
   
 //   delete o1;
 //   o1 = new OccupancyGrid();
 //   orig->getWallMap(o1);
 //   
-//   //o1->blurMapX(3);
-//   //o1->blurMapY(5);
+//   o1->blurMapX(3);
+//   o1->blurMapY(5);
 //   lsd->detectLineSegmentsY(o1, o2);
   std::cout << "End LSD\n";
 
   std::cout << "Image" << std::endl;
+  o2->sendToImage(occImg, 0,0);
   std::cout << "Done!" << std::endl;
 
   

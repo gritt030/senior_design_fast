@@ -9,7 +9,7 @@
 #include <algorithm>
 
 #include "grid/grid.h"
-#include "./../pngwriter/png_writer.h"
+#include "./../ppmwriter/ppm_writer.h"
 
 class OccupancyGrid {
   public:
@@ -68,7 +68,7 @@ class OccupancyGrid {
     
   private:
     //set a pixel in the image
-    void setImagePixel(PngWriter* w, int x, int y, char value);    
+    void setImagePixel(PPMwriter* w, char value);    
 };
 
 #endif

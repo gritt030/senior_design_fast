@@ -292,56 +292,36 @@ void OccupancyGrid::closeLine(int relX1, int relY1, int relX2, int relY2){
 
 
 void OccupancyGrid::sendToImage(char* filename, int x, int y){
-  PngWriter* w = new PngWriter();
+  PPMwriter* w = new PPMwriter();
   int size = Grid::GRID_SIZE;
   
   w->create_image(filename, size, size);
   
   for (int i=0; i<Grid::GRID_SIZE; i++){
     for (int j=0; j<Grid::GRID_SIZE; j++) {
-      char cur = grid->map[j*Grid::GRID_SIZE + i];
-      setImagePixel(w, i, j, cur);
+      char cur = grid->map[i*Grid::GRID_SIZE + j];
+      setImagePixel(w, cur);
     }
   }
-  
-  int px = BOUNDARY+x;
-  int py = BOUNDARY-y;
-  w->set_pixel(px,py,0xff0000ff);
-  w->set_pixel(px+1,py,0xff0000ff);
-  w->set_pixel(px-1,py,0xff0000ff);
-  w->set_pixel(px,py+1,0xff0000ff);
-  w->set_pixel(px,py-1,0xff0000ff);
-  w->set_pixel(px+2,py,0xff0000ff);
-  w->set_pixel(px-2,py,0xff0000ff);
-  w->set_pixel(px,py+2,0xff0000ff);
-  w->set_pixel(px,py-2,0xff0000ff);
-  w->set_pixel(px+1,py+1,0xff0000ff);
-  w->set_pixel(px-1,py+1,0xff0000ff);
-  w->set_pixel(px-1,py-1,0xff0000ff);
-  w->set_pixel(px+1,py-1,0xff0000ff);
   
   w->output_image();
   delete w;
 }
 
 
-void OccupancyGrid::setImagePixel(PngWriter* w, int x, int y, char value){
-  int color;
-  
+void OccupancyGrid::setImagePixel(PPMwriter* w, char value){  
   //open map square
   if (value > 0) {
-    color = (value<<17) | 0x0000ffff;
+    w->write_pixel(0x00, value, 0xff);
   
   //closed map square
   } else if (value < 0) {
-    color = (value<<17) | 0xff0000ff;
+    w->write_pixel(0xff, value, 0x00);
   
   //unknown map square
   } else {
-    color = 0x808080ff;
+    w->write_pixel(0x80, 0x80, 0x80);
   }
-  
-  w->set_pixel(x, y, color);
 }
 
 
