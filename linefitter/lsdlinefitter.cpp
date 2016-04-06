@@ -83,6 +83,11 @@ void LsdLineFitter::generateLsdImage(){
       }
     }
   }
+  
+//   this->sendLsdToImage("/home/owner/pics/pics/lsd.ppm");
+  this->blurImageX();
+  this->blurImageY();
+//   this->sendLsdToImage("/home/owner/pics/pics/lsdblur.ppm");
 }
 
 
@@ -124,7 +129,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
   Region* curRegion;
   Rect* curRect;
   
-  std::cout << lsdimage->GRID_SIZE << std::endl;
+  ///std::cout << lsdimage->GRID_SIZE << std::endl;
   
   for (int i=0; i<LSD_GRID_SIZE; i++){
     for (int j=0; j<LSD_GRID_SIZE; j++){
@@ -176,6 +181,8 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
       }
     }
   }
+  
+  //this->sendLsdToImage("/home/owner/pics/pics/lsdx.ppm");
   
   
   //vertical lines
@@ -231,6 +238,8 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
       }
     }
   }
+  
+  //this->sendLsdToImage("/home/owner/pics/pics/lsdy.ppm");
 }
 
 
@@ -625,6 +634,43 @@ bool LsdLineFitter::refineRect(Rect* rec, Region* reg){
 void LsdLineFitter::rectImprove(){
   
 }
+
+
+
+int THRESH = 1;
+
+
+void LsdLineFitter::blurImageX(){
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      
+      if (this->lsdimage->map[i*LSD_GRID_SIZE + j] != LsdGrid::UNDEFINED){
+        for (int k=j-THRESH; k<=j+THRESH; k++){
+          this->lsdimage->setValue(k, i, 1);
+        }
+        j += THRESH;
+      }
+      
+    }
+  }
+}
+
+
+void LsdLineFitter::blurImageY(){
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=0; j<LSD_GRID_SIZE; j++){
+      
+      if (this->lsdimage->map[j*LSD_GRID_SIZE + i] != LsdGrid::UNDEFINED){
+        for (int k=j-THRESH; k<=j+THRESH; k++){
+          this->lsdimage->setValue(i, k, 1);
+        }
+        j += THRESH;
+      }
+      
+    }
+  }
+}
+
 
 
 

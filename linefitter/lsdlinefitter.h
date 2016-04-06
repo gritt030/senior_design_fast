@@ -2,6 +2,7 @@
 #define LSDLINEFITTER_H
 
 #include <cmath>
+#include <chrono>
 
 #include "./../ppmwriter/ppm_writer.h"
 #include "./../occupancygrid/occupancygrid.h"
@@ -86,6 +87,9 @@ private:
   Rect* regionToRect(Region* reg);
   bool refineRect(Rect* rec, Region* reg);
   void rectImprove();
+  
+  void blurImageX();
+  void blurImageY();
   
   void deleteRegion(Region* reg);
   double dist(double x1, double y1, double x2, double y2);

@@ -1,6 +1,8 @@
 #ifndef HOUGHTRANSFORM_H
 #define HOUGHTRANSFORM_H
 
+#include <chrono>
+
 #include "./../occupancygrid/occupancygrid.h"
 #include "./grid/houghgrid.h"
 

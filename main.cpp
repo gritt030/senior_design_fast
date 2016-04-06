@@ -6,6 +6,7 @@
 #include <string.h>
 #include <cstdio>
 #include <ctime>
+#include <chrono>
 
 
 #include "occupancygrid/grid/grid.h"
@@ -18,7 +19,7 @@
 #include "ppmwriter/ppm_writer.h"
 
 
-int main(int argc, char **argv) {  
+int main(int argc, char **argv) {
   if (argc != 2) {std::cout << "More args please!\n"; return 0;}
   
   char* occImg = "/home/owner/pics/pics/occupancy.ppm";
@@ -61,6 +62,11 @@ int main(int argc, char **argv) {
   //std::srand(std::time(nullptr));
   int num = 0;
   
+  long long t1 = 0;
+  std::chrono::high_resolution_clock::time_point t1_1;
+  std::chrono::high_resolution_clock::time_point t1_2;
+  
+  
   /////Normal main loop /////
   //for (int i=0; i<750; i++) r->updateCoordsFile();
   for (int i=0; i<3000; i++){
@@ -91,39 +97,67 @@ int main(int argc, char **argv) {
     angle = 0.27;
     prevAngle = heading;
     
+    t1_1 = std::chrono::high_resolution_clock::now();
     a->addSonarScan(sonarDists, rawPos[0], rawPos[1], distX/100.0, distY/100.0, heading, angle);
+    t1_2 = std::chrono::high_resolution_clock::now();
+    t1 += std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
+    
+//     if (i%10 == 0) {
+//       std::chrono::high_resolution_clock::time_point tloop_1 = std::chrono::high_resolution_clock::now();
+//       OccupancyGrid* loopmap = a->generateMap();
+//       std::chrono::high_resolution_clock::time_point tloop_2 = std::chrono::high_resolution_clock::now();
+//       long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(tloop_2-tloop_1).count();
+//       std::cout << nano << std::endl;
+//       delete loopmap;
+//     }
     
     r->updateCoordsFile(); //*/
     
   }
   
-  std::cout << "Generating occupancy grid..." << std::endl;
+//   std::cout << "Bananan\n";
+//   return 0;
+  
+  ///std::cout << "Generating occupancy grid..." << std::endl;
+  std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
   OccupancyGrid* orig = a->generateMap();
+  std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
   ////orig->sendToImage(navImg, 0,0);
   
+  std::chrono::high_resolution_clock::time_point t3_1 = std::chrono::high_resolution_clock::now();
   HoughTransform* hough = new HoughTransform(orig);
   double rotation = hough->getYCardinal();
-  std::cout << "Y_Cardinal: " << rotation;
-  std::cout << ", X_Cardinal: " << hough->getXCardinal() << std::endl;
+  std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
+  ///std::cout << "Y_Cardinal: " << rotation;
+  ///std::cout << ", X_Cardinal: " << hough->getXCardinal() << std::endl;
   
+  std::chrono::high_resolution_clock::time_point t4_1 = std::chrono::high_resolution_clock::now();
   a->rotateMap(rotation);
+  std::chrono::high_resolution_clock::time_point t4_2 = std::chrono::high_resolution_clock::now();
   
   delete orig;
+  std::chrono::high_resolution_clock::time_point t5_1 = std::chrono::high_resolution_clock::now();
   orig = a->generateMap();
+  std::chrono::high_resolution_clock::time_point t5_2 = std::chrono::high_resolution_clock::now();
   ////orig->sendToImage(sorImg, 0,0);
   
   
+  std::chrono::high_resolution_clock::time_point t6_1 = std::chrono::high_resolution_clock::now();
   OccupancyGrid* o1 = new OccupancyGrid();
   orig->getWallMap(o1);
-  o1->blurMapX(5);
-  o1->blurMapY(5);
+//   o1->blurMapX(5);
+//   o1->blurMapY(5);
+  std::chrono::high_resolution_clock::time_point t6_2 = std::chrono::high_resolution_clock::now();
   
   OccupancyGrid* o2 = new OccupancyGrid();
   orig->getOpenMap(o2);
-  std::cout << "Begin LSD...\n";
+  ///std::cout << "Begin LSD...\n";
+  
+  std::chrono::high_resolution_clock::time_point t7_1 = std::chrono::high_resolution_clock::now();
   LsdLineFitter* lsd = new LsdLineFitter();
   //lsd->detectLineSegmentsX(o1, o2);
   lsd->detectLineSegments(o1, o2);
+  std::chrono::high_resolution_clock::time_point t7_2 = std::chrono::high_resolution_clock::now();
   
 //   delete o1;
 //   o1 = new OccupancyGrid();
@@ -132,12 +166,32 @@ int main(int argc, char **argv) {
 //   o1->blurMapX(3);
 //   o1->blurMapY(5);
 //   lsd->detectLineSegmentsY(o1, o2);
-  std::cout << "End LSD\n";
+  ///std::cout << "End LSD\n";
 
-  std::cout << "Image" << std::endl;
+  ///std::cout << "Image" << std::endl;
+  std::chrono::high_resolution_clock::time_point t8_1 = std::chrono::high_resolution_clock::now();
   o2->sendToImage(occImg, 0,0);
-  std::cout << "Done!" << std::endl;
+  std::chrono::high_resolution_clock::time_point t8_2 = std::chrono::high_resolution_clock::now();
+  ///std::cout << "Done!" << std::endl;
 
+
+
+  
+  std::cout << t1 << " ";
+  long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
+  std::cout << nano << " ";
+  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t3_2-t3_1).count();
+  std::cout << nano << " ";
+  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t4_2-t4_1).count();
+  std::cout << nano << " ";
+  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t5_2-t5_1).count();
+  std::cout << nano << " ";
+  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t6_2-t6_1).count();
+  std::cout << nano << " ";
+  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t7_2-t7_1).count();
+  std::cout << nano << " ";
+  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t8_2-t8_1).count();
+  std::cout << nano << std::endl;
   
   return 0; //*/
   

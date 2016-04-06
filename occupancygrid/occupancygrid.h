@@ -14,14 +14,10 @@
 class OccupancyGrid {
   public:
     //occupancy variables
-    static const char UNKNOWN = 0;
-    static const char OPEN = 1;
-    static const char CLOSED = -10;
-    static const char THRESHOLD = 0;
-    
-    static const char FRONT_THRESH = 0;
-    static const char FRONTIER = 1;
-    static const char UNFRONTIER = -1;
+    static const char UNKNOWN = Grid::UNKNOWN;
+    static const char OPEN = Grid::OPEN;
+    static const char CLOSED = Grid::CLOSED;
+    static const char THRESHOLD = Grid::THRESHOLD;
     
     //used to correct coordinates when setting values in grid
     static const int BOUNDARY = Grid::GRID_SIZE / 2;
