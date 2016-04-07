@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
   
   /////Normal main loop /////
   //for (int i=0; i<750; i++) r->updateCoordsFile();
-  for (int i=0; i<3000; i++){
+  for (int i=0; i<1500; i++){
     //std::cout << "---- " << i << " ----" << std::endl;
     l->triggerUpdate();
     
@@ -128,8 +128,8 @@ int main(int argc, char **argv) {
   HoughTransform* hough = new HoughTransform(orig);
   double rotation = hough->getYCardinal();
   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
-  ///std::cout << "Y_Cardinal: " << rotation;
-  ///std::cout << ", X_Cardinal: " << hough->getXCardinal() << std::endl;
+  std::cout << "Y_Cardinal: " << rotation;
+  std::cout << ", X_Cardinal: " << hough->getXCardinal() << std::endl;
   
   std::chrono::high_resolution_clock::time_point t4_1 = std::chrono::high_resolution_clock::now();
   a->rotateMap(rotation);

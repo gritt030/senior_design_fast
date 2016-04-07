@@ -18,6 +18,10 @@ class HoughGrid
     int Num_Points = 0;
     double D_THETA;
     
+    float* SIN_ARRAY;
+    float* COS_ARRAY;
+    int COS_OFFSET = THETA_SIZE >> 1;
+    
     unsigned char* map;
     
     //constructor/destructor

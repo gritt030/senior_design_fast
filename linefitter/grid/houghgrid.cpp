@@ -5,6 +5,16 @@
 HoughGrid::HoughGrid() {
   this->map = new unsigned char[RADIUS_SIZE * THETA_SIZE]();
   this->D_THETA = 3.141592654 / THETA_SIZE;
+  
+  SIN_ARRAY = new float[THETA_SIZE];
+  COS_ARRAY = new float[THETA_SIZE];
+  
+  double theta = 0.0;
+  for (int i=0; i<THETA_SIZE; i++){
+    SIN_ARRAY[i] = (float)sin(theta);
+    COS_ARRAY[i] = (float)cos(theta);
+    theta += D_THETA;
+  }
 }
 
 //destructor, destroy grid
@@ -13,21 +23,42 @@ HoughGrid::~HoughGrid() {
 }
 
 
+// //add the hough transform of a point into the hough grid
+// void HoughGrid::addHoughPoint(int x, int y){
+//   double theta = 0.0;
+//   Num_Points++;
+//   int dx = x-CENTER;
+//   int dy = y-CENTER;
+//   int rad;
+//   
+//   for (int i=0; i<THETA_SIZE; i++) {
+//     rad = (int)(dx*cos(theta) + dy*sin(theta));
+//     rad += ADDITION;
+//          
+//     this->map[i*RADIUS_SIZE + (rad >> 3)] |= (0x01 << (rad % 8));
+//     
+//     theta += D_THETA;
+//   }
+// }
+
+
+
 //add the hough transform of a point into the hough grid
 void HoughGrid::addHoughPoint(int x, int y){
-  double theta = 0.0;
   Num_Points++;
   int dx = x-CENTER;
   int dy = y-CENTER;
   int rad;
   
+  if (abs(dx) < abs(dy)) return;
+  
   for (int i=0; i<THETA_SIZE; i++) {
-    rad = (int)(dx*cos(theta) + dy*sin(theta));
+    //rad = (int)(dx*SIN_ARRAY[(i+COS_OFFSET) % THETA_SIZE] + dy*SIN_ARRAY[i]);
+    rad = (int)(dx*COS_ARRAY[i] + dy*SIN_ARRAY[i]);
+    if (rad < 0) rad *= -1;
     rad += ADDITION;
          
-    this->map[i*RADIUS_SIZE + (rad >> 3)] |= (0x01 << (rad % 8));
-    
-    theta += D_THETA;
+    this->map[i*RADIUS_SIZE + (rad >> 3)] |= (0x01 << (rad % 8));    
   }
 }
 
@@ -55,7 +86,7 @@ int HoughGrid::getThetaSums(int* sums){
     }
     
     sums[i] = curSum;
-    //std::cout << i << ", " << curSum << std::endl;
+    std::cout << i << ", " << curSum << std::endl;
   }
   
   return this->Num_Points;
@@ -68,7 +99,7 @@ void HoughGrid::sendHoughToImage(char* filename){
   PPMwriter* w = new PPMwriter();
   unsigned char curByte;
   
-  w->create_image(filename, THETA_SIZE, RADIUS_SIZE*8);
+  w->create_image(filename, RADIUS_SIZE*8, THETA_SIZE);
   
   for (int i=0; i<THETA_SIZE; i++){
     
@@ -92,8 +123,6 @@ void HoughGrid::sendHoughToImage(char* filename){
 
 
 void HoughGrid::setImagePixel(PPMwriter* w, int val){
-  int color;
-  
   //open map square
   if (val > 0) {
     w->write_pixel(0x00, 0x88, 0x00);

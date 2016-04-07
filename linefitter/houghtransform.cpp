@@ -50,10 +50,10 @@ void HoughTransform::detectCardinalDirections(){
   //perform hough transform on given grid
   this->performHoughTransform();
   
-  //this->houghGrid->sendHoughToImage("/home/owner/pics/pics/hough.png");
+  this->houghGrid->sendHoughToImage("/home/owner/pics/pics/hough.ppm");
   
   int size = HoughGrid::THETA_SIZE;
-  int fit = (int)((180.0 / (double)HoughGrid::THETA_SIZE) * 10.0);
+  int fit = (int)((180.0 / (double)HoughGrid::THETA_SIZE) * 0.0);
   
   //generate sums for each theta value from 0 to 180
   int* hist = new int[size]();
@@ -70,6 +70,10 @@ void HoughTransform::detectCardinalDirections(){
       minval = (hist[i] + hist[i+int90]);
     }
   }
+  
+  std::cout << "int90: " << int90 << std::endl;
+  std::cout << "mindex: " << mindex << std::endl;
+  std::cout << "minval: " << minval << std::endl;
     
   //calculate sums and weights for least squares
   int index;
