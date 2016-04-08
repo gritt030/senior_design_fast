@@ -3,13 +3,13 @@
 
 //constructor, create grid
 HoughGrid::HoughGrid() {
-  this->map = new unsigned char[RADIUS_SIZE * THETA_SIZE]();
+  this->map = new unsigned short[RADIUS_SIZE * THETA_SIZE]();
   this->D_THETA = 3.141592654 / THETA_SIZE;
   
   SIN_ARRAY = new float[THETA_SIZE];
   COS_ARRAY = new float[THETA_SIZE];
   
-  double theta = 0.0;
+  float theta = 0.0;
   for (int i=0; i<THETA_SIZE; i++){
     SIN_ARRAY[i] = (float)sin(theta);
     COS_ARRAY[i] = (float)cos(theta);
@@ -20,73 +20,43 @@ HoughGrid::HoughGrid() {
 //destructor, destroy grid
 HoughGrid::~HoughGrid() {
   delete[] this->map;
+  delete[] this->SIN_ARRAY;
+  delete[] this->COS_ARRAY;
 }
-
-
-// //add the hough transform of a point into the hough grid
-// void HoughGrid::addHoughPoint(int x, int y){
-//   double theta = 0.0;
-//   Num_Points++;
-//   int dx = x-CENTER;
-//   int dy = y-CENTER;
-//   int rad;
-//   
-//   for (int i=0; i<THETA_SIZE; i++) {
-//     rad = (int)(dx*cos(theta) + dy*sin(theta));
-//     rad += ADDITION;
-//          
-//     this->map[i*RADIUS_SIZE + (rad >> 3)] |= (0x01 << (rad % 8));
-//     
-//     theta += D_THETA;
-//   }
-// }
-
 
 
 //add the hough transform of a point into the hough grid
 void HoughGrid::addHoughPoint(int x, int y){
-  Num_Points++;
+  this->Num_Points++;
   int dx = x-CENTER;
   int dy = y-CENTER;
   int rad;
   
-  if (abs(dx) < abs(dy)) return;
-  
   for (int i=0; i<THETA_SIZE; i++) {
-    //rad = (int)(dx*SIN_ARRAY[(i+COS_OFFSET) % THETA_SIZE] + dy*SIN_ARRAY[i]);
     rad = (int)(dx*COS_ARRAY[i] + dy*SIN_ARRAY[i]);
-    if (rad < 0) rad *= -1;
+    rad >>= OFFSET;
     rad += ADDITION;
-         
-    this->map[i*RADIUS_SIZE + (rad >> 3)] |= (0x01 << (rad % 8));    
+    
+    this->map[i*RADIUS_SIZE + rad]++;   
   }
 }
 
 
-//sum the number of filled cells for each theta column
-int HoughGrid::getThetaSums(int* sums){
-  int curSum;
-  unsigned char curByte;
-  
+//get the highest peak for each theta column
+int HoughGrid::getThetaPeaks(int* sums){
+  unsigned short curMax;
+  unsigned short curVal;
   
   for (int i=0; i<THETA_SIZE; i++){
-    curSum = 0;
+    curMax = 0;
     
     for (int j=0; j<RADIUS_SIZE; j++){
-      curByte = this->map[i*RADIUS_SIZE + j];
-      
-      curSum += curByte & 0x01;
-      curSum += (curByte >> 1) & 0x01;
-      curSum += (curByte >> 2) & 0x01;
-      curSum += (curByte >> 3) & 0x01;
-      curSum += (curByte >> 4) & 0x01;
-      curSum += (curByte >> 5) & 0x01;
-      curSum += (curByte >> 6) & 0x01;
-      curSum += (curByte >> 7) & 0x01;
+      curVal = this->map[i*RADIUS_SIZE + j];
+      if (curVal > curMax) curMax = curVal;
     }
     
-    sums[i] = curSum;
-    std::cout << i << ", " << curSum << std::endl;
+    sums[i] = (int)curMax;
+    //std::cout << i << ", " << (int)curMax << std::endl;
   }
   
   return this->Num_Points;
@@ -94,26 +64,17 @@ int HoughGrid::getThetaSums(int* sums){
 
 
 
-
+//write the hough transform to an image
 void HoughGrid::sendHoughToImage(char* filename){
   PPMwriter* w = new PPMwriter();
-  unsigned char curByte;
+  unsigned short curVal;
   
-  w->create_image(filename, RADIUS_SIZE*8, THETA_SIZE);
+  w->create_image(filename, RADIUS_SIZE, THETA_SIZE);
   
   for (int i=0; i<THETA_SIZE; i++){
-    
     for (int j=0; j<RADIUS_SIZE; j++){
-      curByte = this->map[i*RADIUS_SIZE + j];
-
-      setImagePixel(w, curByte & 0x01);
-      setImagePixel(w, (curByte >> 1) & 0x01);
-      setImagePixel(w, (curByte >> 2) & 0x01);
-      setImagePixel(w, (curByte >> 3) & 0x01);
-      setImagePixel(w, (curByte >> 4) & 0x01);
-      setImagePixel(w, (curByte >> 5) & 0x01);
-      setImagePixel(w, (curByte >> 6) & 0x01);
-      setImagePixel(w, (curByte >> 7) & 0x01);
+      curVal = this->map[i*RADIUS_SIZE + j];
+      setImagePixel(w, curVal);
     }
   }
   
@@ -122,14 +83,14 @@ void HoughGrid::sendHoughToImage(char* filename){
 }
 
 
-void HoughGrid::setImagePixel(PPMwriter* w, int val){
+void HoughGrid::setImagePixel(PPMwriter* w, unsigned short val){
   //open map square
   if (val > 0) {
-    w->write_pixel(0x00, 0x88, 0x00);
-  
-  //unknown map square
-  } else {
-    w->write_pixel(0x80, 0x80, 0x80);
+    float frac = 2048.0 / (float)val;
+    frac = 255.0 - frac;
+    if (frac < 0.0) frac = 0.0;
+    w->write_pixel(0x00, (char)frac, 0xff);
   }
+  else w->write_pixel(0x80, 0x80, 0x80);    //unknown cell
 }
 

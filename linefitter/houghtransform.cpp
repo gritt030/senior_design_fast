@@ -50,30 +50,29 @@ void HoughTransform::detectCardinalDirections(){
   //perform hough transform on given grid
   this->performHoughTransform();
   
-  this->houghGrid->sendHoughToImage("/home/owner/pics/pics/hough.ppm");
+  //this->houghGrid->sendHoughToImage("/home/owner/pics/pics/hough.ppm");
   
   int size = HoughGrid::THETA_SIZE;
-  int fit = (int)((180.0 / (double)HoughGrid::THETA_SIZE) * 0.0);
   
   //generate sums for each theta value from 0 to 180
   int* hist = new int[size]();
-  this->houghGrid->getThetaSums(hist);
+  this->houghGrid->getThetaPeaks(hist);
   
-  //find minimum 90 degree peaks in histogram
+  //find maximum 90 degree peaks in histogram
   int int90 = size >> 1;
   int mindex = 0;
-  int minval = hist[0] + hist[int90];
+  int mval = hist[0] + hist[int90];
   
   for (int i=1; i<int90; i++){
-    if ((hist[i] + hist[i+int90]) < minval) {
+    if ((hist[i] + hist[i+int90]) > mval) {
       mindex = i;
-      minval = (hist[i] + hist[i+int90]);
+      mval = (hist[i] + hist[i+int90]);
     }
   }
   
   std::cout << "int90: " << int90 << std::endl;
-  std::cout << "mindex: " << mindex << std::endl;
-  std::cout << "minval: " << minval << std::endl;
+  std::cout << "max index: " << mindex << std::endl;
+  std::cout << "max val: " << mval << std::endl;
     
   //calculate sums and weights for least squares
   int index;
@@ -83,7 +82,7 @@ void HoughTransform::detectCardinalDirections(){
   int thetaWeight1 = 0;
   int thetaWeight2 = 0;
   
-  for (int i=(mindex-fit); i<=(mindex+fit); i++) {
+  for (int i=(mindex-FIT); i<=(mindex+FIT); i++) {
     if (i < 0) {
       index = i+size;
       index2 = index - (size >> 1);
@@ -122,4 +121,24 @@ void HoughTransform::detectCardinalDirections(){
     if (X_Cardinal > 3.141592654) X_Cardinal -= 3.141592654;
   }
 }
+
+
+void HoughTransform::doHoughStrip(){
+  HoughStrip* h = new HoughStrip();
+  
+  char cur;
+  
+  //generate hough transform grid
+  for (int i=0; i<Grid::GRID_SIZE; i++){
+    for (int j=0; j<Grid::GRID_SIZE; j++){
+      cur = this->grid->grid->map[j*Grid::GRID_SIZE + i];
+      if (cur < 0) h->addHoughPoint(i,j);
+    }
+  }
+  
+  int* sums = new int[h->THETA_SIZE];
+  h->getThetaPeaks(sums);
+}
+
+
 

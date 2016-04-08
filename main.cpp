@@ -19,7 +19,7 @@
 #include "ppmwriter/ppm_writer.h"
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) {  
   if (argc != 2) {std::cout << "More args please!\n"; return 0;}
   
   char* occImg = "/home/owner/pics/pics/occupancy.ppm";
@@ -128,8 +128,19 @@ int main(int argc, char **argv) {
   HoughTransform* hough = new HoughTransform(orig);
   double rotation = hough->getYCardinal();
   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
+  
+  hough->doHoughStrip();
+  return 0;
+  
+  
+  
   std::cout << "Y_Cardinal: " << rotation;
   std::cout << ", X_Cardinal: " << hough->getXCardinal() << std::endl;
+  //return 0;
+  
+  
+  
+  
   
   std::chrono::high_resolution_clock::time_point t4_1 = std::chrono::high_resolution_clock::now();
   a->rotateMap(rotation);

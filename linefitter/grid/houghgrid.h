@@ -10,29 +10,29 @@
 class HoughGrid
 {
   public:
-    static const int RADIUS_SIZE = (int)(Grid::GRID_SIZE * 1.414213562 / 8.0) + 1;
+    static const char OFFSET = 0;
+    static const int RADIUS_SIZE = ((int)(Grid::GRID_SIZE * 1.414213562) >> OFFSET) + 1;
     static const int THETA_SIZE = 360; // 180/0.5
     static const int CENTER = Grid::GRID_SIZE/2;
-    static const int ADDITION = (int)(Grid::GRID_SIZE * 0.7071067812) + 1;
+    static const int ADDITION = (RADIUS_SIZE >> 1) + 1;
     
-    int Num_Points = 0;
-    double D_THETA;
+    float D_THETA;
     
     float* SIN_ARRAY;
     float* COS_ARRAY;
-    int COS_OFFSET = THETA_SIZE >> 1;
     
-    unsigned char* map;
+    unsigned short* map;
+    int Num_Points = 0;
     
     //constructor/destructor
     HoughGrid();
     ~HoughGrid();
     
     void addHoughPoint(int x, int y);
-    int getThetaSums(int* sums);
+    int getThetaPeaks(int* sums);
     
     void sendHoughToImage(char* filename);
-    void setImagePixel(PPMwriter* w, int val);
+    void setImagePixel(PPMwriter* w, unsigned short val);
 };
 
 #endif // HOUGHGRID_H
