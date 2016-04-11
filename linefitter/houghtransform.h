@@ -5,7 +5,6 @@
 
 #include "./../occupancygrid/occupancygrid.h"
 #include "./grid/houghgrid.h"
-#include "./grid/houghstrip.h"
 
 class HoughTransform
 {
@@ -15,9 +14,7 @@ public:
   
   double getYCardinal();
   double getXCardinal();
-  
-  void doHoughStrip(); //TODO:get rid of this
-  
+    
 private:
   double X_Cardinal, Y_Cardinal;
   bool isDone = false;

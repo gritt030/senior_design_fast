@@ -38,8 +38,8 @@ void HoughTransform::performHoughTransform(){
   //generate hough transform grid
   for (int i=0; i<Grid::GRID_SIZE; i++){
     for (int j=0; j<Grid::GRID_SIZE; j++){
-      cur = this->grid->grid->map[j*Grid::GRID_SIZE + i];
-      if (cur < 0) this->houghGrid->addHoughPoint(i,j);
+      cur = this->grid->grid->map[i*Grid::GRID_SIZE + j];
+      if (cur < 0) this->houghGrid->addHoughPoint(j,i);
     }
   }
 }
@@ -69,10 +69,6 @@ void HoughTransform::detectCardinalDirections(){
       mval = (hist[i] + hist[i+int90]);
     }
   }
-  
-  std::cout << "int90: " << int90 << std::endl;
-  std::cout << "max index: " << mindex << std::endl;
-  std::cout << "max val: " << mval << std::endl;
     
   //calculate sums and weights for least squares
   int index;
@@ -121,24 +117,4 @@ void HoughTransform::detectCardinalDirections(){
     if (X_Cardinal > 3.141592654) X_Cardinal -= 3.141592654;
   }
 }
-
-
-void HoughTransform::doHoughStrip(){
-  HoughStrip* h = new HoughStrip();
-  
-  char cur;
-  
-  //generate hough transform grid
-  for (int i=0; i<Grid::GRID_SIZE; i++){
-    for (int j=0; j<Grid::GRID_SIZE; j++){
-      cur = this->grid->grid->map[j*Grid::GRID_SIZE + i];
-      if (cur < 0) h->addHoughPoint(i,j);
-    }
-  }
-  
-  int* sums = new int[h->THETA_SIZE];
-  h->getThetaPeaks(sums);
-}
-
-
 

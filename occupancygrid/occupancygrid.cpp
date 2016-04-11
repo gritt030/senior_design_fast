@@ -699,8 +699,8 @@ void OccupancyGrid::blurMapY(int uncertainty){
 void OccupancyGrid::mergeMaps(OccupancyGrid* newGrid){
   for(int i=0; i<Grid::GRID_SIZE; i++){
     for(int j=0; j<Grid::GRID_SIZE; j++){
-      char cur = newGrid->grid->map[j*Grid::GRID_SIZE + i];
-      this->grid->changeValue(i,j,cur);
+      char cur = newGrid->grid->map[i*Grid::GRID_SIZE + j];
+      this->grid->changeValue(j,i,cur);
     }
   }
 }
@@ -711,8 +711,8 @@ void OccupancyGrid::mergeMaps(OccupancyGrid* newGrid){
 void OccupancyGrid::overlayMaps(OccupancyGrid* newGrid){
   for(int i=0; i<Grid::GRID_SIZE; i++){
     for(int j=0; j<Grid::GRID_SIZE; j++){
-      char cur = newGrid->grid->map[j*Grid::GRID_SIZE + i];
-      if (cur != 0) this->grid->map[j*Grid::GRID_SIZE + i] = cur;
+      char cur = newGrid->grid->map[i*Grid::GRID_SIZE + j];
+      if (cur != 0) this->grid->map[i*Grid::GRID_SIZE + j] = cur;
     }
   }
 }
@@ -723,8 +723,8 @@ void OccupancyGrid::overlayMaps(OccupancyGrid* newGrid){
 void OccupancyGrid::getWallMap(OccupancyGrid* newGrid){
   for(int i=0; i<Grid::GRID_SIZE; i++){
     for(int j=0; j<Grid::GRID_SIZE; j++){
-      char cur = this->grid->map[j*Grid::GRID_SIZE + i];
-      if (cur < 0) newGrid->grid->map[j*Grid::GRID_SIZE + i] = cur;
+      char cur = this->grid->map[i*Grid::GRID_SIZE + j];
+      if (cur < 0) newGrid->grid->map[i*Grid::GRID_SIZE + j] = cur;
     }
   }
 }
@@ -735,8 +735,8 @@ void OccupancyGrid::getWallMap(OccupancyGrid* newGrid){
 void OccupancyGrid::getOpenMap(OccupancyGrid* newGrid){
   for(int i=0; i<Grid::GRID_SIZE; i++){
     for(int j=0; j<Grid::GRID_SIZE; j++){
-      char cur = this->grid->map[j*Grid::GRID_SIZE + i];
-      if (cur > 0) newGrid->grid->map[j*Grid::GRID_SIZE + i] = cur;
+      char cur = this->grid->map[i*Grid::GRID_SIZE + j];
+      if (cur > 0) newGrid->grid->map[i*Grid::GRID_SIZE + j] = cur;
     }
   }
 }

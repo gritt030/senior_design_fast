@@ -10,7 +10,7 @@
 class HoughGrid
 {
   public:
-    static const char OFFSET = 0;
+    static const char OFFSET = 2;
     static const int RADIUS_SIZE = ((int)(Grid::GRID_SIZE * 1.414213562) >> OFFSET) + 1;
     static const int THETA_SIZE = 360; // 180/0.5
     static const int CENTER = Grid::GRID_SIZE/2;
