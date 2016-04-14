@@ -16,20 +16,22 @@ public:
   Grid* inimage = nullptr;
   Grid* outimage = nullptr;
   int LSD_GRID_SIZE;
+  int MAX_X, MAX_Y, MIN_X, MIN_Y;
   
   static const unsigned char UNDEFINED = LsdGrid::UNDEFINED;
+  static const unsigned char DEFINED = LsdGrid::DEFINED;
   static const int LENGTH = 10;
   
   //detection parameters
-  double SCALE = 0.8; //sampling scale 0.8
-  double SIGMA_SCALE = 0.6; //sigma of gaussian filter 0.6
-  double ANG_TH = 22.5;  //22.5 0 < x < 180 diffs in angles less than this value are aligned
-  double LOG_EPS = 0.0; //0.0
-  double DENSITY_TH = 0.7; //0.7 0 <= x <= 1
+  float SCALE = 0.8; //sampling scale 0.8
+  float SIGMA_SCALE = 0.6; //sigma of gaussian filter 0.6
+  float ANG_TH = 22.5;  //22.5 0 < x < 180 diffs in angles less than this value are aligned
+  float LOG_EPS = 0.0; //0.0
+  float DENSITY_TH = 0.7; //0.7 0 <= x <= 1
   
   //detected lines
   int num_lines;
-  double* detected_lines;
+  float* detected_lines;
   
   //constructor
   LsdLineFitter();
@@ -49,7 +51,6 @@ public:
 private:
   typedef struct {
     int size;
-    unsigned char angle;
     int* xVals;
     int* yVals;
   } Region;
@@ -57,16 +58,15 @@ private:
   typedef struct node {
     int x;
     int y;
-    unsigned char value;
     struct node* next;
   } PointList;
   
   typedef struct {
-    double x1,y1,x2,y2; //first and second pts of line segment
-    double width;       //rectangle width
-    double x, y;        //center of rectangle
-    double theta;       //angle
-    double dx,dy;       //vector oriented as line segment
+    float x1,y1,x2,y2; //first and second pts of line segment
+    float width;       //rectangle width
+    float x, y;        //center of rectangle
+    float theta;       //angle
+    float dx,dy;       //vector oriented as line segment
   } Rect;
   
   
@@ -74,26 +74,22 @@ private:
   LsdGrid* lsdimage = nullptr;
   
   unsigned char ALIGNED_THRESH_CHAR;
-  double ALIGNED_THRESH_DOUBLE;
+  float ALIGNED_THRESH_FLOAT;
+  int MIN_REG_SIZE;
   
   void generateLsdImage();
-  void gradientImageX();
-  void gradientImageY();
   
   Region* regionGrow(int x, int y);
-  bool isAligned(unsigned char angle1, unsigned char angle2);
-  bool isAligned(double angle1, double angle2);
-  double getTheta(Region* reg, double x, double y);
+  bool isAligned(float angle1, float angle2);
+  float getTheta(Region* reg, float x, float y);
   Rect* regionToRect(Region* reg);
   bool refineRect(Rect* rec, Region* reg);
-  void rectImprove();
   
   void blurImageX();
   void blurImageY();
   
   void deleteRegion(Region* reg);
-  double dist(double x1, double y1, double x2, double y2);
-  double nfa(int pts, int alg, double p, double logNT);
+  float dist(float x1, float y1, float x2, float y2);
 };
 
 #endif // LSDLINEFITTER_H

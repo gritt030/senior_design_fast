@@ -7,6 +7,7 @@ public:
   int GRID_SIZE;
   static const unsigned char MAX_VALUE = 255;  //maximum value we can have in a grid square
   static const unsigned char UNDEFINED = 255;
+  static const unsigned char DEFINED = 1;
   
   unsigned char* map;
   
