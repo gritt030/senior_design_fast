@@ -20,14 +20,7 @@
 #include "ppmwriter/ppm_writer.h"
 
 
-int main(int argc, char **argv) {
-  for (float x=-1.0; x<1.0; x+=0.1){
-    for (float y=0.0; y<1.0; y+=0.1){
-      std::cout << y/x << " " << fast_atan2(y,x) << " " << atan2(y,x) << std::endl;
-    }
-  }
-  return 0;
-  
+int main(int argc, char **argv) {  
   if (argc != 2) {std::cout << "More args please!\n"; return 0;}
   
   char* occImg = "/home/owner/pics/pics/occupancy.ppm";

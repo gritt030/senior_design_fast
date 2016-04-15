@@ -1,24 +1,24 @@
 #include "lsdlinefitter.h"
 
 #ifndef M_LN10
-#define M_LN10 2.30258509299404568402
+#define M_LN10 2.30258509299404568402f
 #endif
 
 #ifndef M_PI
-#define M_PI   3.14159265358979323846
+#define M_PI   3.14159265358979323846f
 #endif
 
 #ifndef M_HPI
-#define M_HPI  1.57079632679489661923
+#define M_HPI  1.57079632679489661923f
 #endif
 
 
 LsdLineFitter::LsdLineFitter() {
-  int at = (int)round(ANG_TH * 1.41666666666667);
+  int at = (int)round(ANG_TH * 1.41666666666667f);
   if (at > 254) ALIGNED_THRESH_CHAR = 254;
   else ALIGNED_THRESH_CHAR = (unsigned char)at;
   
-  ALIGNED_THRESH_FLOAT = ANG_TH*M_HPI/180.0;
+  ALIGNED_THRESH_FLOAT = ANG_TH*M_HPI/180.0f;
 }
 
 LsdLineFitter::~LsdLineFitter()
@@ -45,7 +45,7 @@ void LsdLineFitter::generateLsdImage(){
   if (this->inimage == nullptr) return;
   
   int size = Grid::GRID_SIZE;
-  if (SCALE != 1.0) size = (int)(size*SCALE) + 1;
+  if (SCALE != 1.0f) size = (int)(size*SCALE) + 1;
   
   this->lsdimage = new LsdGrid(size);
   this->LSD_GRID_SIZE = size;
@@ -98,14 +98,42 @@ void LsdLineFitter::generateLsdImage(){
   MAX_X++;
   MAX_Y++;
   
-  MIN_REG_SIZE = (int)(-(5.0*log10(size) + 1.041392685) / log10(ANG_TH/180.0));
+  MIN_REG_SIZE = (int)(-(5.0f*log10(size) + 1.041392685f) / log10(ANG_TH/180.0f));
   //MIN_REG_SIZE = 0;
   //std::cout << MIN_REG_SIZE << std::endl;
   
 //   this->sendLsdToImage("/home/owner/pics/pics/lsdmake.ppm");
   this->blurImageX();
   this->blurImageY();
+  crosshatchLsdImage();
 //   this->sendLsdToImage("/home/owner/pics/pics/lsdblur.ppm");
+}
+
+
+void LsdLineFitter::crosshatchLsdImage(){
+  int size = 50;
+  for (int i=0; i<LSD_GRID_SIZE; i++){
+    for (int j=(i%size); j<LSD_GRID_SIZE; j+=size){
+      lsdimage->setValue(j,i, UNDEFINED);
+    }
+  }
+  for (int i=1; i<LSD_GRID_SIZE; i++){
+    for (int j=((i-1)%size); j<LSD_GRID_SIZE; j+=size){
+      lsdimage->setValue(j,i, UNDEFINED);
+    }
+  }
+  
+  for (int i=LSD_GRID_SIZE-1; i>=0; i--){
+    for (int j=LSD_GRID_SIZE-(i%size); j>=0; j-=size){
+      lsdimage->setValue(j,i, UNDEFINED);
+    }
+  }
+  for (int i=LSD_GRID_SIZE-2; i>=0; i--){
+    for (int j=LSD_GRID_SIZE-((i-1)%size); j>=0; j-=size){
+      lsdimage->setValue(j,i, UNDEFINED);
+    }
+  }
+  this->sendLsdToImage("/home/owner/pics/pics/lsdcross.ppm");
 }
 
 
@@ -113,7 +141,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
   this->setImage(grid->grid);
   
   this->generateLsdImage();
-  this->sendLsdToImage("/home/owner/pics/pics/lsd.ppm");
+  //this->sendLsdToImage("/home/owner/pics/pics/lsd.ppm");
   
   unsigned char curVal;
   Region* curRegion;
@@ -136,7 +164,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
         curRect = regionToRect(curRegion);
         refineRect(curRect, curRegion);
         
-        if (SCALE != 1.0) {
+        if (SCALE != 1.0f) {
           (curRect->x) /= SCALE;
           (curRect->y) /= SCALE;
           (curRect->x1) /= SCALE;
@@ -152,7 +180,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
         
         if (curLen >= LENGTH){
           //horizontal lines
-          if (isAligned(curRect->theta, 0.0)){
+          if (isAligned(curRect->theta, 0.0f)){
             dx = curRect->x2 - curRect->x1;
             cx = dx/fabs(dx);
             dy = curRect->y2 - curRect->y1;
@@ -169,7 +197,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
             }
           
           //vertical lines
-          } else if (isAligned(curRect->theta, 1.570796327)){
+          } else if (isAligned(curRect->theta, 1.570796327f)){
             dx = curRect->x2 - curRect->x1;
             cx = dx/fabs(dx);
             dy = curRect->y2 - curRect->y1;
@@ -223,7 +251,7 @@ this->setImage(grid->grid);
         curRect = regionToRect(curRegion);
         refineRect(curRect, curRegion);
         
-        if (SCALE != 1.0) {
+        if (SCALE != 1.0f) {
           (curRect->x) /= SCALE;
           (curRect->y) /= SCALE;
           (curRect->x1) /= SCALE;
@@ -239,7 +267,7 @@ this->setImage(grid->grid);
         
         if (curLen >= LENGTH){
           //horizontal lines
-          if (isAligned(curRect->theta, 0.0)){
+          if (isAligned(curRect->theta, 0.0f)){
             dx = curRect->x2 - curRect->x1;
             cx = dx/fabs(dx);
             dy = curRect->y2 - curRect->y1;
@@ -294,7 +322,7 @@ this->setImage(grid->grid);
         curRect = regionToRect(curRegion);
         refineRect(curRect, curRegion);
         
-        if (SCALE != 1.0) {
+        if (SCALE != 1.0f) {
           (curRect->x) /= SCALE;
           (curRect->y) /= SCALE;
           (curRect->x1) /= SCALE;
@@ -310,7 +338,7 @@ this->setImage(grid->grid);
         
         if (curLen >= LENGTH){
           //vertical lines
-          if (isAligned(curRect->theta, 1.570796327)){
+          if (isAligned(curRect->theta, 1.570796327f)){
             dx = curRect->x2 - curRect->x1;
             cx = dx/fabs(dx);
             dy = curRect->y2 - curRect->y1;
@@ -420,9 +448,9 @@ bool LsdLineFitter::isAligned(float angle1, float angle2){
 
 float LsdLineFitter::getTheta(Region* reg, float x, float y){
   float lambda,theta;
-  float Ixx = 0.0;
-  float Iyy = 0.0;
-  float Ixy = 0.0;
+  float Ixx = 0.0f;
+  float Iyy = 0.0f;
+  float Ixy = 0.0f;
   int i;
 
   //compute inertia matrix
@@ -434,13 +462,13 @@ float LsdLineFitter::getTheta(Region* reg, float x, float y){
     }
     
   //compute smallest eigenvalue
-  lambda = 0.5 * ( Ixx + Iyy - sqrt( (Ixx-Iyy)*(Ixx-Iyy) + 4.0*Ixy*Ixy ) );
+  lambda = 0.5f * ( Ixx + Iyy - sqrt( (Ixx-Iyy)*(Ixx-Iyy) + 4.0f*Ixy*Ixy ) );
   
   //compute angle
   theta = fabs(Ixx)>fabs(Iyy) ? atan2(lambda-Ixx,Ixy) : atan2(Ixy,lambda-Iyy);
   
   //make positive
-  if (theta < 0.0) theta += M_PI;
+  if (theta < 0.0f) theta += M_PI;
     
   return theta;
 }
@@ -483,7 +511,7 @@ LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
    */
   dx = cos(theta);
   dy = sin(theta);
-  l_min = l_max = w_min = w_max = 0.0;
+  l_min = l_max = w_min = w_max = 0.0f;
   for(i=0; i<reg->size; i++)
     {
       l =  ((float)reg->xVals[i] - x) * dx + ((float)reg->yVals[i] - y) * dy;
@@ -509,7 +537,7 @@ LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
   rec->dy = dy;
 
   //we impose a minimal width of one pixel
-  if( rec->width < 1.0 ) rec->width = 1.0;
+  if( rec->width < 1.0f ) rec->width = 1.0f;
   
   return rec;
 }
@@ -537,7 +565,7 @@ bool LsdLineFitter::refineRect(Rect* rec, Region* reg){
   
   //while the density criterion is not satisfied, remove farther pixels
   while( density < DENSITY_TH ) {
-    rad *= 0.75; //reduce region's radius to 75% of its value
+    rad *= 0.75f; //reduce region's radius to 75% of its value
 
     //remove points from the region and update 'used' map
     for(i=0; i<reg->size; i++)
@@ -580,18 +608,15 @@ bool LsdLineFitter::refineRect(Rect* rec, Region* reg){
 }
 
 
-int THRESH = 1;
-
-
 void LsdLineFitter::blurImageX(){
   for (int i=MIN_Y; i<MAX_Y; i++){
     for (int j=MIN_X; j<MAX_X; j++){
       
       if (this->lsdimage->map[i*LSD_GRID_SIZE + j] != LsdGrid::UNDEFINED){
-        for (int k=j-THRESH; k<=j+THRESH; k++){
+        for (int k=j-BLUR; k<=j+BLUR; k++){
           this->lsdimage->setValue(k, i, DEFINED);
         }
-        j += THRESH;
+        j += BLUR;
       }
       
     }
@@ -604,10 +629,10 @@ void LsdLineFitter::blurImageY(){
     for (int j=MIN_X; j<MAX_X; j++){
       
       if (this->lsdimage->map[j*LSD_GRID_SIZE + i] != LsdGrid::UNDEFINED){
-        for (int k=j-THRESH; k<=j+THRESH; k++){
+        for (int k=j-BLUR; k<=j+BLUR; k++){
           this->lsdimage->setValue(i, k, DEFINED);
         }
-        j += THRESH;
+        j += BLUR;
       }
       
     }
