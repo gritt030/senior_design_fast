@@ -730,6 +730,25 @@ void OccupancyGrid::getWallMap(OccupancyGrid* newGrid){
 }
 
 
+int OccupancyGrid::getWallMap(std::vector<int>* xpos, std::vector<int>* ypos){
+  int count = 0;
+  
+  for(int i=0; i<Grid::GRID_SIZE; i++){
+    for(int j=0; j<Grid::GRID_SIZE; j++){
+      char cur = this->grid->map[i*Grid::GRID_SIZE + j];
+      if (cur < 0){
+        xpos->push_back(j);
+        ypos->push_back(i);
+        count++;
+      }
+    }
+  }
+  
+  xpos->shrink_to_fit();
+  ypos->shrink_to_fit();
+  return count;
+}
+
 
 //copy just the open areas of the occupancy grid into newGrid
 void OccupancyGrid::getOpenMap(OccupancyGrid* newGrid){

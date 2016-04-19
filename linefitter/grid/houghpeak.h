@@ -1,17 +1,18 @@
 
-#ifndef HOUGHGRID_H
-#define HOUGHGRID_H
+#ifndef HOUGHPEAK_H
+#define HOUGHPEAK_H
 
 #include <iostream>
 #include <cmath>
 #include "./../../occupancygrid/grid/grid.h"
-#include "./../../ppmwriter/ppm_writer.h"
 
-class HoughGrid
+class HoughPeak
 {
   public:
     static const int RADIUS_SIZE = (int)(Grid::GRID_SIZE * 1.414213562) + 1;
-    static const int THETA_SIZE = 45; // 180/4 degrees
+    static const int THETA_SIZE = 16;       //number of bins making up PEAK_DEGREES
+    static const int PEAK_DEGREES = 8;     //number of degrees around peak to use
+    static const int THETA_BOUND = THETA_SIZE * 2 + 1;
     static const int CENTER = Grid::GRID_SIZE/2;
     static const int ADDITION = (RADIUS_SIZE >> 1) + 1;
     
@@ -20,19 +21,17 @@ class HoughGrid
     float* SIN_ARRAY;
     float* COS_ARRAY;
     
-    unsigned short* map;
+    unsigned short* peak1map;
+    unsigned short* peak2map;
     
     int Num_Points = 0;
     
     //constructor/destructor
-    HoughGrid();
-    ~HoughGrid();
+    HoughPeak(float peak1);
+    ~HoughPeak();
     
     void addHoughPoint(int x, int y);
-    int getThetaPeaks(int* sums);
-    
-    void sendHoughToImage(char* filename);
-    void setImagePixel(PPMwriter* w, unsigned short val);
+    int getThetaPeaks(int* sumpeak1, int* sumpeak2);
 };
 
-#endif // HOUGHGRID_H
+#endif // HOUGHPEAK_H

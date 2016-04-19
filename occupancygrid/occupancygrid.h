@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <algorithm>
+#include <vector>
 
 #include "grid/grid.h"
 #include "./../ppmwriter/ppm_writer.h"
@@ -53,6 +54,7 @@ class OccupancyGrid {
 
     //copy just the walls of the occupancy map into newGrid
     void getWallMap(OccupancyGrid* newGrid);
+    int getWallMap(std::vector<int>* xpos, std::vector<int>* ypos);
     //copy just the open areas of the occupancy map into newGrid
     void getOpenMap(OccupancyGrid* newGrid);
     

@@ -111,7 +111,7 @@ void LsdLineFitter::generateLsdImage(){
 
 
 void LsdLineFitter::crosshatchLsdImage(){
-  int size = 50;
+  int size = 65;
   for (int i=0; i<LSD_GRID_SIZE; i++){
     for (int j=(i%size); j<LSD_GRID_SIZE; j+=size){
       lsdimage->setValue(j,i, UNDEFINED);

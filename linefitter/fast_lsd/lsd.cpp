@@ -2625,12 +2625,43 @@ double* LineSegmentDetection_gradient(int *n_out, float *img, EyeMARS::Matrix2d<
   double rho, reg_angle, prec, p, log_nfa, logNT;
   int ls_count = 0; /* line segments are numbered 1,2,3,... */
 
+  /* check parameters */
+  // if (img == NULL || X <= 0 || Y <= 0)
+  //   error("invalid image input.");
+  // if (scale <= 0.0)
+  //   error("'scale' value must be positive.");
+  // if (sigma_scale <= 0.0)
+  //   error("'sigma_scale' value must be positive.");
+  // if (quant < 0.0)
+  //   error("'quant' value must be positive.");
+  // if (ang_th <= 0.0 || ang_th >= 180.0)
+  //   error("'ang_th' value must be in the range (0,180).");
+  // if (density_th < 0.0 || density_th > 1.0)
+  //   error("'density_th' value must be in the range [0,1].");
+  // if (n_bins <= 0)
+  //   error("'n_bins' value must be positive.");
+
   /* angle tolerance */
   prec = M_PI * ang_th / 180.0;
   p = ang_th / 180.0;
   rho = quant / sin(prec); /*
+  gradient magnitude threshold */
+  // #ifdef TIMING_OLD
+  //   clock_gettime(GET_CLOCK_METHOD, &end_t);
+  //   printf("--| Set parameters: %f ms.\n",
+  //          ((end_t.tv_sec - start_t.tv_sec) * 1000.0)
+  //           + ((end_t.tv_usec - start_t.tv_usec) / 1000.0));
+  //   clock_gettime(GET_CLOCK_METHOD, &start_t);
+  // #endif
   /* load and scale image (if necessary) and compute angle at each pixel */
   image = new_image_float_ptr((unsigned int) X, (unsigned int) Y, img);
+  #if 0
+  //   clock_gettime(GET_CLOCK_METHOD, &end_t);
+  //   printf("--| Load image: %f ms.\n",
+  //          ((end_t.tv_sec - start_t.tv_sec) * 1000.0)
+  //           + ((end_t.tv_usec - start_t.tv_usec) / 1000.0));
+  //   clock_gettime(GET_CLOCK_METHOD, &start_t);
+  #endif
   if (sobel.data() != NULL && USE_OUR_SOBEL) {
     // printf("Computing structs from sobel\n");
     angles = ll_angle_grad(image, sobel, rho, &list_p, &mem_p, &modgrad,
@@ -2649,8 +2680,15 @@ double* LineSegmentDetection_gradient(int *n_out, float *img, EyeMARS::Matrix2d<
   }
   xsize = angles->xsize;
   ysize = angles->ysize;
+  // #ifdef TIMING_OLD
+  //   clock_gettime(CLOCK_REALTIME_COARSE, &end_t);
+  //   printf("--| Compute angle at each pixel: %f ms.\n",
+  //          ((end_t.tv_sec - start_t.tv_sec) * 1000.0)
+  //           + ((end_t.tv_usec - start_t.tv_usec) / 1000.0));
+  //   clock_gettime(CLOCK_REALTIME_COARSE, &start_t);
+  // #endif
+  /* Number of Tests - NT
 
-  /*
    The theoretical number of tests is Np.(XY)^(5/2)
    where X and Y are number of columns and rows of the image.
    Np corresponds to the number of angle precisions considered.

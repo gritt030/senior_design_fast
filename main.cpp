@@ -16,7 +16,6 @@
 #include "sonar/sonararchive.h"
 #include "linefitter/lsdlinefitter.h"
 #include "linefitter/houghtransform.h"
-#include "linefitter/fast_atan2.h"
 #include "ppmwriter/ppm_writer.h"
 
 
@@ -126,10 +125,39 @@ int main(int argc, char **argv) {
   ////orig->sendToImage(navImg, 0,0);
   
   std::chrono::high_resolution_clock::time_point t3_1 = std::chrono::high_resolution_clock::now();
-  HoughTransform* hough = new HoughTransform(orig);
+  std::vector<int>* xPos = new std::vector<int>();
+  std::vector<int>* yPos = new std::vector<int>();
+  int numPts = orig->getWallMap(xPos, yPos);
+  HoughTransform* hough = new HoughTransform(numPts, xPos, yPos);
+//   HoughTransform* hough = new HoughTransform(orig);
   double rotation = hough->getYCardinal();
+//   delete xPos;
+//   delete yPos;
   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
   
+/*
+  char* fname = new char[128]();
+  for (int i=1; i<=20; i+=1){
+    hough->RANDOM_DIV = i;
+    float rotation = hough->getYCardinal();
+    std::cout << i << " : Y_Cardinal: " << rotation;
+    std::cout << ", X_Cardinal: " << hough->getXCardinal() << std::endl;
+    a->rotateMap(rotation);
+    std::sprintf(fname, "/home/owner/pics/pics/sequence/rand%d.ppm", i);
+    a->generateMap()->sendToImage(fname, 0,0);
+    a->rotateMap(-rotation);
+    delete hough;
+    hough = new HoughTransform(numPts, xPos, yPos);
+  }
+  return 0;*/
+  
+//   for (int i=1; i<11; i++){
+//     delete hough;
+//     hough = new HoughTransform(numPts, xPos, yPos);
+//     hough->RANDOM_DIV = i;
+//     std::cout << i << " " << hough->getYCardinal() << std::endl;
+//   }
+//   return 0;
   
 //   std::cout << "Y_Cardinal: " << rotation;
 //   std::cout << ", X_Cardinal: " << hough->getXCardinal() << std::endl;
@@ -186,7 +214,7 @@ int main(int argc, char **argv) {
 
 
 
-  
+  //addscan genmap hough rotate genmap wallmap lsd image
   std::cout << t1 << " ";
   long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
   std::cout << nano << " ";

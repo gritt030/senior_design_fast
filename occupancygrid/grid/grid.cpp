@@ -62,10 +62,11 @@ char Grid::getValue(int x, int y){
 
 
 bool Grid::thresholdOpenValue(int x, int y){
-  if ((x<0) || (y<0) || (x>=Grid::GRID_SIZE) || (y>=Grid::GRID_SIZE)) {
-    std::cout << "BAD THRESHOPEN!\n";
-    return false;
-  }
+//TODO: do we need these checks?
+//   if ((x<0) || (y<0) || (x>=Grid::GRID_SIZE) || (y>=Grid::GRID_SIZE)) {
+//     std::cout << "BAD THRESHOPEN!\n";
+//     return false;
+//   }
     
   char current = this->map[y*Grid::GRID_SIZE + x];
 

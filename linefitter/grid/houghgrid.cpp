@@ -4,6 +4,7 @@
 //constructor, create grid
 HoughGrid::HoughGrid() {
   this->map = new unsigned short[RADIUS_SIZE * THETA_SIZE]();
+  
   this->D_THETA = 3.141592654 / THETA_SIZE;
   
   SIN_ARRAY = new float[THETA_SIZE];
@@ -34,7 +35,6 @@ void HoughGrid::addHoughPoint(int x, int y){
   
   for (int i=0; i<THETA_SIZE; i++) {
     rad = (int)(dx*COS_ARRAY[i] + dy*SIN_ARRAY[i]);
-    rad >>= OFFSET;
     rad += ADDITION;
     
     this->map[i*RADIUS_SIZE + rad]++;   

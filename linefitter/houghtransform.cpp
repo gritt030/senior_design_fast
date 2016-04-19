@@ -8,12 +8,21 @@ HoughTransform::HoughTransform(OccupancyGrid* grid){
 }
 
 
-HoughTransform::~HoughTransform(){
-  delete this->houghGrid;
+HoughTransform::HoughTransform(int numPoints, std::vector<int>* xpos, std::vector<int>* ypos){
+  this->houghGrid = new HoughGrid();
+  this->numPoints = numPoints;
+  this->xPos = *xpos;
+  this->yPos = *ypos;
 }
 
 
-double HoughTransform::getYCardinal(){
+HoughTransform::~HoughTransform(){
+  delete this->houghGrid;
+  delete this->houghPeak;
+}
+
+
+float HoughTransform::getYCardinal(){
   if (!isDone) {
     detectCardinalDirections();
     isDone = true;
@@ -22,7 +31,7 @@ double HoughTransform::getYCardinal(){
   return Y_Cardinal;
 }
   
-double HoughTransform::getXCardinal(){
+float HoughTransform::getXCardinal(){
   if (!isDone) {
     detectCardinalDirections();
     isDone = true;
@@ -33,23 +42,91 @@ double HoughTransform::getXCardinal(){
 
 
 void HoughTransform::performHoughTransform(){
-  char cur;
-  
-  //generate hough transform grid
-  for (int i=0; i<Grid::GRID_SIZE; i++){
-    for (int j=0; j<Grid::GRID_SIZE; j++){
-      cur = this->grid->grid->map[i*Grid::GRID_SIZE + j];
-      if (cur < 0) this->houghGrid->addHoughPoint(j,i);
-    }
+
+  for (int i=0; i<numPoints; i++){
+    this->houghGrid->addHoughPoint(xPos[i], yPos[i]);
   }
+  
+//   int max = this->numPoints / RANDOM_DIV;
+//   int i,j;
+//   char cur;
+//   
+//   for (int count=0; count<max; count++){
+//     i = rand() % numPoints;
+//     this->houghGrid->addHoughPoint(xPos[i], yPos[i]);
+//     numpts++;
+//   }
+  
+//   char cur;
+//   //generate hough transform grid
+//   for (int i=0; i<Grid::GRID_SIZE; i++){
+//     for (int j=0; j<Grid::GRID_SIZE; j++){
+//       cur = this->grid->grid->map[i*Grid::GRID_SIZE + j];
+//       if (cur < 0) this->houghGrid->addHoughPoint(j,i);
+//     }
+//   }
+}
+
+
+
+int HoughTransform::testRand(int div){
+  this->RANDOM_DIV = div;
+  this->numpts = 0;
+  
+  delete this->houghGrid;
+  this->houghGrid = new HoughGrid();
+  
+  this->performHoughTransform();
+  
+  int size = HoughGrid::THETA_SIZE;
+  
+  //generate sums for each theta value from 0 to 180
+  int* hist = new int[size]();
+  this->houghGrid->getThetaPeaks(hist);
+  
+  for (int i=0; i<size; i++){
+    std::cout << hist[i] << " ";
+  }
+  std::cout << ", " << numpts;
+  std::cout << std::endl;
+  
+  delete[] hist;
+}
+
+
+
+
+void HoughTransform::performHoughPeaks(){
+
+  for (int i=0; i<numPoints; i++){
+    this->houghPeak->addHoughPoint(xPos[i], yPos[i]);
+  }
+  
+//   int max = this->numPoints / RANDOM_DIV;
+//   int i,j;
+//   char cur;
+//   
+//   for (int count=0; count<max; count++){
+//     i = rand() % numPoints;
+//     this->houghPeak->addHoughPoint(xPos[i], yPos[i]);
+//     numpts++;
+//   }
+  
+//   char cur;
+//   //generate hough transform grid
+//   for (int i=0; i<Grid::GRID_SIZE; i++){
+//     for (int j=0; j<Grid::GRID_SIZE; j++){
+//       cur = this->grid->grid->map[i*Grid::GRID_SIZE + j];
+//       if (cur < 0) this->houghPeak->addHoughPoint(j,i);
+//     }
+//   }
 }
 
 
 
 void HoughTransform::detectCardinalDirections(){
-  //perform hough transform on given grid
+  ///// perform rough hough transform on given grid /////
   this->performHoughTransform();
-  
   //this->houghGrid->sendHoughToImage("/home/owner/pics/pics/hough.ppm");
   
   int size = HoughGrid::THETA_SIZE;
@@ -69,52 +146,61 @@ void HoughTransform::detectCardinalDirections(){
       mval = (hist[i] + hist[i+int90]);
     }
   }
+  
+  delete[] hist;
+  
+  ///// perform a more accurate hough transform around the peaks /////
+  float peak1 = 3.141592654f * ((float)mindex / (float)size);
     
-  //calculate sums and weights for least squares
-  int index;
-  int index2;
+  this->houghPeak = new HoughPeak(peak1);
+  
+  this->performHoughPeaks();
+  size = HoughPeak::THETA_BOUND;
+  
+  int* hist1 = new int[size]();
+  int* hist2 = new int[size]();
+  
+  this->houghPeak->getThetaPeaks(hist1, hist2);
+    
+  ///// calculate sums and weights for least squares /////
   int histWeight1 = 0;
   int histWeight2 = 0;
   int thetaWeight1 = 0;
   int thetaWeight2 = 0;
   
-  for (int i=(mindex-FIT); i<=(mindex+FIT); i++) {
-    if (i < 0) {
-      index = i+size;
-      index2 = index - (size >> 1);
-    } else {
-      index = i % size;
-      index2 = (i + (size >> 1)) % size;
-    }
-    
-    histWeight1 += hist[index];
-    histWeight2 += hist[index2];
-    thetaWeight1 += i*hist[index];
-    thetaWeight2 += i*hist[index2];
+  for (int i=0; i<size; i++) {
+    histWeight1 += hist1[i];
+    histWeight2 += hist2[i];
+    thetaWeight1 += i*hist1[i];
+    thetaWeight2 += i*hist2[i];
   }
   
-  delete[] hist;
+  delete[] hist1;
+  delete[] hist2;
   
   //make sure that there were actually peaks in the hough transform
   if ((histWeight1 + histWeight2) == 0) {
-    X_Cardinal = 1.570796327;
+    X_Cardinal = 1.570796327f;
     Y_Cardinal = 0.0;
     return;
   }
   
   //least squares for finding best cardinal direction fit
-  double theta = (double)(thetaWeight1 + thetaWeight2) / (double)(histWeight1 + histWeight2);
-  theta = 3.141592654 * (theta / (double)size);
-  
+  float theta = (float)(thetaWeight1 + thetaWeight2) / (float)(histWeight1 + histWeight2);
+  theta -= HoughPeak::THETA_SIZE;
+  theta *= HoughPeak::PEAK_DEGREES * 0.0174532925f;
+  theta /= HoughPeak::THETA_SIZE;
+  theta += peak1;
+    
   //save cardinal directions
-  if ((theta > 0.7853981634) && (theta < 2.35619449)) {
+  if ((theta > 0.7853981634f) && (theta < 2.35619449f)) {
     X_Cardinal = theta;
-    Y_Cardinal = theta + 1.570796327;
-    if (Y_Cardinal > 3.141592654) Y_Cardinal -= 3.141592654;
+    Y_Cardinal = theta + 1.570796327f;
+    if (Y_Cardinal > 3.141592654f) Y_Cardinal -= 3.141592654f;
   } else {
     Y_Cardinal = theta;
-    X_Cardinal = theta + 1.570796327;
-    if (X_Cardinal > 3.141592654) X_Cardinal -= 3.141592654;
+    X_Cardinal = theta + 1.570796327f;
+    if (X_Cardinal > 3.141592654f) X_Cardinal -= 3.141592654f;
   }
 }
 
