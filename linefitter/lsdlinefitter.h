@@ -28,7 +28,7 @@ public:
   float SIGMA_SCALE = 0.6f; //sigma of gaussian filter 0.6
   float ANG_TH = 22.5f;  //22.5 0 < x < 180 diffs in angles less than this value are aligned
   float LOG_EPS = 0.0f; //0.0
-  float DENSITY_TH = 0.7f; //0.7 0 <= x <= 1
+  float DENSITY_TH = 0.7f * 0.7f; //0.7 0 <= x <= 1
   
   //detected lines
   int num_lines;
@@ -84,6 +84,9 @@ private:
   Region* regionGrow(int x, int y);
   bool isAligned(float angle1, float angle2);
   float getTheta(Region* reg, float x, float y);
+  float getTheta2(Region* reg, float x, float y);
+  float getTheta3(Region* reg, float x, float y);
+  float getTheta4(Region* reg, float x, float y);
   Rect* regionToRect(Region* reg);
   bool refineRect(Rect* rec, Region* reg);
   
@@ -91,7 +94,6 @@ private:
   void blurImageY();
   
   void deleteRegion(Region* reg);
-  float dist(float x1, float y1, float x2, float y2);
 };
 
 #endif // LSDLINEFITTER_H

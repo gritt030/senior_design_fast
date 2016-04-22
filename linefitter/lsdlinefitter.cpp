@@ -12,6 +12,9 @@
 #define M_HPI  1.57079632679489661923f
 #endif
 
+#ifndef DIST
+#define DIST(x1, y1, x2, y2) ((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
+#endif
 
 LsdLineFitter::LsdLineFitter() {
   int at = (int)round(ANG_TH * 1.41666666666667f);
@@ -99,7 +102,7 @@ void LsdLineFitter::generateLsdImage(){
   MAX_Y++;
   
   MIN_REG_SIZE = (int)(-(5.0f*log10(size) + 1.041392685f) / log10(ANG_TH/180.0f));
-  //MIN_REG_SIZE = 0;
+//   MIN_REG_SIZE = 0;
   //std::cout << MIN_REG_SIZE << std::endl;
   
 //   this->sendLsdToImage("/home/owner/pics/pics/lsdmake.ppm");
@@ -133,7 +136,7 @@ void LsdLineFitter::crosshatchLsdImage(){
       lsdimage->setValue(j,i, UNDEFINED);
     }
   }
-  this->sendLsdToImage("/home/owner/pics/pics/lsdcross.ppm");
+//   this->sendLsdToImage("/home/owner/pics/pics/lsdcross.ppm");
 }
 
 
@@ -176,7 +179,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
           (curRect->dy) /= SCALE;
         }
         
-        curLen = dist(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
+        curLen = DIST(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
         
         if (curLen >= LENGTH){
           //horizontal lines
@@ -263,7 +266,7 @@ this->setImage(grid->grid);
           (curRect->dy) /= SCALE;
         }
         
-        curLen = dist(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
+        curLen = DIST(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
         
         if (curLen >= LENGTH){
           //horizontal lines
@@ -334,7 +337,7 @@ this->setImage(grid->grid);
           (curRect->dy) /= SCALE;
         }
         
-        curLen = dist(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
+        curLen = DIST(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
         
         if (curLen >= LENGTH){
           //vertical lines
@@ -455,12 +458,12 @@ float LsdLineFitter::getTheta(Region* reg, float x, float y){
 
   //compute inertia matrix
   for(i=0; i<reg->size; i++)
-    {
-      Ixx += ((float)reg->yVals[i] - y) * ((float)reg->yVals[i] - y);
-      Iyy += ((float)reg->xVals[i] - x) * ((float)reg->xVals[i] - x);
-      Ixy -= ((float)reg->xVals[i] - x) * ((float)reg->yVals[i] - y);
-    }
-    
+  {
+    Ixx += ((float)reg->yVals[i] - y) * ((float)reg->yVals[i] - y);
+    Iyy += ((float)reg->xVals[i] - x) * ((float)reg->xVals[i] - x);
+    Ixy -= ((float)reg->xVals[i] - x) * ((float)reg->yVals[i] - y);
+  }
+  
   //compute smallest eigenvalue
   lambda = 0.5f * ( Ixx + Iyy - sqrt( (Ixx-Iyy)*(Ixx-Iyy) + 4.0f*Ixy*Ixy ) );
   
@@ -469,14 +472,95 @@ float LsdLineFitter::getTheta(Region* reg, float x, float y){
   
   //make positive
   if (theta < 0.0f) theta += M_PI;
-    
+  
   return theta;
 }
 
 
-//distance between two points
-float LsdLineFitter::dist(float x1, float y1, float x2, float y2){
-  return sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+float LsdLineFitter::getTheta2(Region* reg, float x, float y){
+  float theta;
+  float Ixx = 0.0f;
+  float Iyy = 0.0f;
+  float Ixy = 0.0f;
+  int i;
+
+  //compute inertia matrix
+  for(i=0; i<reg->size; i++)
+  {
+    Ixx += ((float)reg->yVals[i] - y) * ((float)reg->yVals[i] - y);
+    Iyy += ((float)reg->xVals[i] - x) * ((float)reg->xVals[i] - x);
+    Ixy += ((float)reg->xVals[i] - x) * ((float)reg->yVals[i] - y);
+  }
+  
+  Ixx /= reg->size;
+  Iyy /= reg->size;
+  Ixy /= reg->size;
+  theta = 0.5 * atan2(-2*Ixy, -Iyy + Ixx);
+  theta += M_HPI;
+  
+  return theta;
+}
+
+
+float LsdLineFitter::getTheta3(Region* reg, float x, float y){
+  float theta;
+  int Ixx = 0;
+  int Iyy = 0;
+  int Ixy = 0;
+  int i;
+  int cx = (int)round(x);
+  int cy = (int)round(y);
+
+  //compute inertia matrix
+  for(i=0; i<reg->size; i++)
+  {
+    Ixx += (reg->yVals[i] - cy) * (reg->yVals[i] - cy);
+    Iyy += (reg->xVals[i] - cx) * (reg->xVals[i] - cx);
+    Ixy += (reg->xVals[i] - cx) * (reg->yVals[i] - cy);
+  }
+  
+  float mxx = (float)Ixx / (float)reg->size;
+  float myy = (float)Iyy / (float)reg->size;
+  float mxy = (float)Ixy / (float)reg->size;
+  theta = 0.5 * atan2(-2*mxy, -myy + mxx);
+  theta += M_HPI;
+  
+  return theta;
+}
+
+//BEST ONE
+float LsdLineFitter::getTheta4(Region* reg, float x, float y){
+  float theta;
+  int syy = 0;
+  int sxx = 0;
+  int sy = 0;
+  int sx = 0;
+  int sxy = 0;
+  int i;
+  int cx = (int)round(x);
+  int cy = (int)round(y);
+
+  //compute inertia matrix
+  for(i=0; i<reg->size; i++)
+  {
+    syy += reg->yVals[i] * reg->yVals[i];
+    sy += reg->yVals[i];
+    sxy += reg->yVals[i] * reg->xVals[i];
+    sxx += reg->xVals[i] * reg->xVals[i];
+    sx += reg->xVals[i];
+  }
+  
+  float Ixx = syy - 2.0f*y*sy + reg->size*y*y;
+  float Iyy = sxx - 2.0f*x*sx + reg->size*x*x;
+  float Ixy = sxy - x*sy - y*sx + reg->size*x*y;
+  
+  Ixx /= reg->size;
+  Iyy /= reg->size;
+  Ixy /= reg->size;
+  theta = 0.5 * atan2(-2*Ixy, -Iyy + Ixx);
+  theta += M_HPI;
+  
+  return theta;
 }
 
 
@@ -485,17 +569,55 @@ LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
   int i;
 
   //center of region using LS
-  x = 0;
-  y = 0;
+  int cx = 0;
+  int cy = 0;
   for (i=0; i<reg->size; i++){
-    x += reg->xVals[i];
-    y += reg->yVals[i];
+    cx += reg->xVals[i];
+    cy += reg->yVals[i];
   }
-  x = x / (float)reg->size;
-  y = y / (float)reg->size;
+  x = (float)cx / (float)reg->size;
+  y = (float)cy / (float)reg->size;
 
   //angle of region
-  theta = getTheta(reg, x, y);
+//   std::chrono::high_resolution_clock::time_point t1_1 = std::chrono::high_resolution_clock::now();
+//   for (int i=0; i<1000; i++){
+//     theta = getTheta(reg, x, y);
+//   }
+//   std::chrono::high_resolution_clock::time_point t1_2 = std::chrono::high_resolution_clock::now();
+//   
+//   std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
+//   for (int i=0; i<1000; i++){
+//     theta = getTheta2(reg, x, y);
+//   }
+//   std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
+//   
+//   std::chrono::high_resolution_clock::time_point t3_1 = std::chrono::high_resolution_clock::now();
+//   for (int i=0; i<1000; i++){
+//     theta = getTheta3(reg, x, y);
+//   }
+//   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
+//   
+//   std::chrono::high_resolution_clock::time_point t4_1 = std::chrono::high_resolution_clock::now();
+//   for (int i=0; i<1000; i++){
+//     theta = getTheta4(reg, x, y);
+//   }
+//   std::chrono::high_resolution_clock::time_point t4_2 = std::chrono::high_resolution_clock::now();
+//   
+//   long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t3_2-t3_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t4_2-t4_1).count();
+//   std::cout << nano << std::endl;
+  
+//   std::cout << getTheta(reg, x, y) << " ";
+//   std::cout << getTheta2(reg, x, y) << " ";
+//   std::cout << getTheta3(reg, x, y) << " ";
+//   std::cout << getTheta4(reg, x, y) << std::endl;
+  
+  theta = getTheta4(reg, x, y);
 
   /* length and width:
 
@@ -513,15 +635,15 @@ LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
   dy = sin(theta);
   l_min = l_max = w_min = w_max = 0.0f;
   for(i=0; i<reg->size; i++)
-    {
-      l =  ((float)reg->xVals[i] - x) * dx + ((float)reg->yVals[i] - y) * dy;
-      w = -((float)reg->xVals[i] - x) * dy + ((float)reg->yVals[i] - y) * dx;
+  {
+    l =  ((float)reg->xVals[i] - x) * dx + ((float)reg->yVals[i] - y) * dy;
+    w = -((float)reg->xVals[i] - x) * dy + ((float)reg->yVals[i] - y) * dx;
 
-      if( l > l_max ) l_max = l;
-      if( l < l_min ) l_min = l;
-      if( w > w_max ) w_max = w;
-      if( w < w_min ) w_min = w;
-    }
+    if( l > l_max ) l_max = l;
+    if( l < l_min ) l_min = l;
+    if( w > w_max ) w_max = w;
+    if( w < w_min ) w_min = w;
+  }
 
   //store values
   Rect* rec = new Rect;
@@ -550,7 +672,7 @@ bool LsdLineFitter::refineRect(Rect* rec, Region* reg){
   Rect* newRect;
 
   //compute region points density
-  density = (float)reg->size / (dist(rec->x1,rec->y1,rec->x2,rec->y2) * rec->width);
+  density = (float)(reg->size * reg->size) / (DIST(rec->x1,rec->y1,rec->x2,rec->y2) * rec->width * rec->width);
 
   //if the density criterion is satisfied there is nothing to do
   if( density >= DENSITY_TH ) return true;
@@ -559,17 +681,17 @@ bool LsdLineFitter::refineRect(Rect* rec, Region* reg){
   //compute region's radius
   xc = (float) reg->xVals[0];
   yc = (float) reg->yVals[0];
-  rad1 = dist( xc, yc, rec->x1, rec->y1 );
-  rad2 = dist( xc, yc, rec->x2, rec->y2 );
+  rad1 = DIST( xc, yc, rec->x1, rec->y1 );
+  rad2 = DIST( xc, yc, rec->x2, rec->y2 );
   rad = rad1 > rad2 ? rad1 : rad2;
   
   //while the density criterion is not satisfied, remove farther pixels
   while( density < DENSITY_TH ) {
-    rad *= 0.75f; //reduce region's radius to 75% of its value
+    rad *= 0.5625f; //reduce region's radius to 75% of its value
 
     //remove points from the region and update 'used' map
     for(i=0; i<reg->size; i++)
-      if(dist(xc, yc, (float)reg->xVals[i], (float)reg->yVals[i]) > rad)
+      if(DIST(xc, yc, (float)reg->xVals[i], (float)reg->yVals[i]) > rad)
         {
           //point not kept, mark it as unused
           lsdimage->map[reg->yVals[i]*LSD_GRID_SIZE + reg->xVals[i]] = DEFINED;
@@ -600,7 +722,7 @@ bool LsdLineFitter::refineRect(Rect* rec, Region* reg){
     delete newRect;
 
     //re-compute region points density
-    density = (float)reg->size / (dist(rec->x1,rec->y1,rec->x2,rec->y2) * rec->width);
+    density = (float)(reg->size * reg->size) / (DIST(rec->x1,rec->y1,rec->x2,rec->y2) * rec->width * rec->width);
   }
 
   //if this point is reached, the density criterion is satisfied

@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
   
   SonarArchive* a = new SonarArchive();
   
+  bool test;
   double* pose = new double[3];
   int* sonars = new int[4];
   
@@ -50,10 +51,11 @@ int main(int argc, char **argv) {
   /////Normal main loop /////
 //   for (int i=0; i<223; i++) r->updateCoordsFile();
   for (int i=0; i<3000; i++){
-    //std::cout << "---- " << i << " ----" << std::endl;
+//     std::cout << "---- " << i << " ----" << std::endl;
     
-    r->getCurrentPoseNew(pose);
+    test = r->getCurrentPoseNew(pose);
     r->getCurrentSonarsNew(sonars);
+    if (!test) break;
     
     t1_1 = std::chrono::high_resolution_clock::now();
     a->addSonarScan(sonars, pose[0], pose[1], pose[2]);
@@ -72,8 +74,6 @@ int main(int argc, char **argv) {
     r->updateCoordsFileNew();
   }
   
-  a->generateMap(0.27f)->sendToImage(occImg,0,0);
-  return 0;
 //   std::cout << "Bananan\n";
 //   return 0;
   
@@ -90,10 +90,10 @@ int main(int argc, char **argv) {
   HoughTransform* hough = new HoughTransform(numPts, xPos, yPos);
 //   HoughTransform* hough = new HoughTransform(orig);
   double rotation = hough->getYCardinal();
-//   delete xPos;
-//   delete yPos;
+  delete xPos;
+  delete yPos;
   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
-  
+    
 /*
   char* fname = new char[128]();
   for (int i=1; i<=20; i+=1){
@@ -170,7 +170,6 @@ int main(int argc, char **argv) {
   o2->sendToImage(occImg, 0,0);
   std::chrono::high_resolution_clock::time_point t8_2 = std::chrono::high_resolution_clock::now();
   ///std::cout << "Done!" << std::endl;
-
 
 
   //addscan genmap hough rotate genmap wallmap lsd image

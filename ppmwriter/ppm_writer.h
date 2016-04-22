@@ -2,6 +2,7 @@
 #define PPM_WRITER_H
 
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <string.h>
@@ -14,12 +15,16 @@ public:
   void write_pixel(char r, char g, char b);
   void output_image();
   
+  int WIDTH, HEIGHT;
+  
   //constructor
   PPMwriter();
 
 private:
-  int WIDTH;
+  char* imgData;
+  int curPix = 0;
   FILE *ppmFile;
+  std::ofstream* ppmStream;
 };
 
 #endif // PNG_WRITER_H

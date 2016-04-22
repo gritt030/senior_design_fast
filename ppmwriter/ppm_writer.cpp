@@ -11,6 +11,8 @@ void PPMwriter::create_image(char* filename, int width, int height){
   }
   
   WIDTH = width;
+  HEIGHT = height;
+  imgData = new char[width*height*3];
   
   char header[128];
   std::sprintf(header, "P6\n%5d %5d\n255\n", width, height);
@@ -19,14 +21,17 @@ void PPMwriter::create_image(char* filename, int width, int height){
 
 
 void PPMwriter::write_pixel(char r, char g, char b){
-  std::fwrite((void*)&r, 1,1, ppmFile);
-  std::fwrite((void*)&g, 1,1, ppmFile);
-  std::fwrite((void*)&b, 1,1, ppmFile);
+  imgData[curPix++] = r;
+  imgData[curPix++] = g;
+  imgData[curPix++] = b;
 }
 
 
 void PPMwriter::output_image(){
-  std::fflush(ppmFile);
+  std::fwrite((void*)imgData, WIDTH*HEIGHT*3, 1, ppmFile);
+//   std::fflush(ppmFile);
   std::fclose(ppmFile);
+  
+  delete imgData;
 }
 
