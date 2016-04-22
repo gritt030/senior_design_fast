@@ -172,22 +172,22 @@ int main(int argc, char **argv) {
   ///std::cout << "Done!" << std::endl;
 
 
-  //addscan genmap hough rotate genmap wallmap lsd image
-  std::cout << t1 << " ";
-  long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
-  std::cout << nano << " ";
-  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t3_2-t3_1).count();
-  std::cout << nano << " ";
-  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t4_2-t4_1).count();
-  std::cout << nano << " ";
-  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t5_2-t5_1).count();
-  std::cout << nano << " ";
-  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t6_2-t6_1).count();
-  std::cout << nano << " ";
-  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t7_2-t7_1).count();
-  std::cout << nano << " ";
-  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t8_2-t8_1).count();
-  std::cout << nano << std::endl;
+//   //addscan genmap hough rotate genmap wallmap lsd image
+//   std::cout << t1 << " ";
+//   long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t3_2-t3_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t4_2-t4_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t5_2-t5_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t6_2-t6_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t7_2-t7_1).count();
+//   std::cout << nano << " ";
+//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t8_2-t8_1).count();
+//   std::cout << nano << std::endl;
   
   return 0; //*/
   

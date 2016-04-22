@@ -141,10 +141,12 @@ void LsdLineFitter::crosshatchLsdImage(){
 
 
 void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGrid){
-  this->setImage(grid->grid);
+  this->inimage = grid->grid;
   
+  std::chrono::high_resolution_clock::time_point t1_1 = std::chrono::high_resolution_clock::now();
   this->generateLsdImage();
   //this->sendLsdToImage("/home/owner/pics/pics/lsd.ppm");
+  std::chrono::high_resolution_clock::time_point t1_2 = std::chrono::high_resolution_clock::now();
   
   unsigned char curVal;
   Region* curRegion;
@@ -153,20 +155,45 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
   float curLen;
   float dx, cx, dy, cy;
   float slope, x, y;
-    
+  
+  long long access = 0;
+  long long grow = 0;
+  long long rect = 0;
+  long long refine = 0;
+  long long scale = 0;
+  long long dist = 0;
+  long long draw = 0;
+  
+  std::chrono::high_resolution_clock::time_point tL_1, tL_2;
+  
+  std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
   for (int i=MIN_Y; i<MAX_Y; i++){
     for (int j=MIN_X; j<MAX_X; j++){
+      tL_1 = std::chrono::high_resolution_clock::now();
       curVal = this->lsdimage->map[i*LSD_GRID_SIZE + j];
+      tL_2 = std::chrono::high_resolution_clock::now();
+      access += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
       
       if (curVal != UNDEFINED){
+      tL_1 = std::chrono::high_resolution_clock::now();
         curRegion = regionGrow(j,i);
+      tL_2 = std::chrono::high_resolution_clock::now();
+      grow += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
         //reject small regions
         if (curRegion->size < MIN_REG_SIZE) continue;
         
+      tL_1 = std::chrono::high_resolution_clock::now();
         curRect = regionToRect(curRegion);
-        refineRect(curRect, curRegion);
+      tL_2 = std::chrono::high_resolution_clock::now();
+      rect += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
+      tL_1 = std::chrono::high_resolution_clock::now();
+        refineRect(curRect, curRegion);
+      tL_2 = std::chrono::high_resolution_clock::now();
+      refine += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
+        
+      tL_1 = std::chrono::high_resolution_clock::now();
         if (SCALE != 1.0f) {
           (curRect->x) /= SCALE;
           (curRect->y) /= SCALE;
@@ -178,9 +205,18 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
           (curRect->dx) /= SCALE;
           (curRect->dy) /= SCALE;
         }
+      tL_2 = std::chrono::high_resolution_clock::now();
+      scale += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
+        
+        
+      tL_1 = std::chrono::high_resolution_clock::now();
         curLen = DIST(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
+      tL_2 = std::chrono::high_resolution_clock::now();
+      dist += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
+        
+      tL_1 = std::chrono::high_resolution_clock::now();
         if (curLen >= LENGTH){
           //horizontal lines
           if (isAligned(curRect->theta, 0.0f)){
@@ -223,17 +259,35 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
             }
           }
         }
-          
+      tL_2 = std::chrono::high_resolution_clock::now();
+      draw += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
+        
+        
         delete curRect;
         deleteRegion(curRegion);
       }
     }
   }
+  std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
+  
+  
+  //genimg loop access grow rect refine scale dist draw
+  long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
+  std::cout << nano << " ";
+  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
+  std::cout << nano << " ";
+  std::cout << access << " ";
+  std::cout << grow << " ";
+  std::cout << rect << " ";
+  std::cout << refine << " ";
+  std::cout << scale << " ";
+  std::cout << dist << " ";
+  std::cout << draw << std::endl;
 }
 
 
 void LsdLineFitter::detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newGrid){
-this->setImage(grid->grid);
+  this->inimage = grid->grid;
   
   this->generateLsdImage();
   
@@ -303,7 +357,7 @@ this->setImage(grid->grid);
 
 
 void LsdLineFitter::detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newGrid){
-this->setImage(grid->grid);
+  this->inimage = grid->grid;
   
   this->generateLsdImage();
   this->sendLsdToImage("/home/owner/pics/pics/lsd.ppm");
@@ -537,8 +591,6 @@ float LsdLineFitter::getTheta4(Region* reg, float x, float y){
   int sx = 0;
   int sxy = 0;
   int i;
-  int cx = (int)round(x);
-  int cy = (int)round(y);
 
   //compute inertia matrix
   for(i=0; i<reg->size; i++)
@@ -557,80 +609,154 @@ float LsdLineFitter::getTheta4(Region* reg, float x, float y){
   Ixx /= reg->size;
   Iyy /= reg->size;
   Ixy /= reg->size;
-  theta = 0.5 * atan2(-2*Ixy, -Iyy + Ixx);
+  theta = 0.5f * atan2(-2.0f*Ixy, -Iyy + Ixx);
   theta += M_HPI;
   
   return theta;
 }
 
 
+// LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
+//   float x,y,dx,dy,l,w,theta,l_min,l_max,w_min,w_max;
+//   int i;
+//   
+//   //compute needed sums
+//   int sumX=0, sumY=0, sumXX=0, sumYY=0, sumXY=0;
+//   for(i=0; i<reg->size; i++)
+//   {
+//     sumYY += reg->yVals[i] * reg->yVals[i];
+//     sumY += reg->yVals[i];
+//     sumXY += reg->yVals[i] * reg->xVals[i];
+//     sumXX += reg->xVals[i] * reg->xVals[i];
+//     sumX += reg->xVals[i];
+//   }
+// 
+//   //center of region using LS
+//   x = (float)sumX / (float)reg->size;
+//   y = (float)sumY / (float)reg->size;
+// 
+//   //angle of region
+// //   std::chrono::high_resolution_clock::time_point t1_1 = std::chrono::high_resolution_clock::now();
+// //   for (int i=0; i<1000; i++){
+// //     theta = getTheta(reg, x, y);
+// //   }
+// //   std::chrono::high_resolution_clock::time_point t1_2 = std::chrono::high_resolution_clock::now();
+// //   
+// //   std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
+// //   for (int i=0; i<1000; i++){
+// //     theta = getTheta2(reg, x, y);
+// //   }
+// //   std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
+// //   
+// //   std::chrono::high_resolution_clock::time_point t3_1 = std::chrono::high_resolution_clock::now();
+// //   for (int i=0; i<1000; i++){
+// //     theta = getTheta3(reg, x, y);
+// //   }
+// //   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
+// //   
+// //   std::chrono::high_resolution_clock::time_point t4_1 = std::chrono::high_resolution_clock::now();
+// //   for (int i=0; i<1000; i++){
+// //     theta = getTheta4(reg, x, y);
+// //   }
+// //   std::chrono::high_resolution_clock::time_point t4_2 = std::chrono::high_resolution_clock::now();
+// //   
+// //   long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
+// //   std::cout << nano << " ";
+// //   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
+// //   std::cout << nano << " ";
+// //   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t3_2-t3_1).count();
+// //   std::cout << nano << " ";
+// //   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t4_2-t4_1).count();
+// //   std::cout << nano << std::endl;
+//   
+// //   std::cout << getTheta(reg, x, y) << " ";
+// //   std::cout << getTheta2(reg, x, y) << " ";
+// //   std::cout << getTheta3(reg, x, y) << " ";
+// //   std::cout << getTheta4(reg, x, y) << std::endl;
+//   
+// //   theta = getTheta4(reg, x, y);
+//   
+//   //find theta
+//   float Ixx = sumYY - 2.0f*y*sumY + reg->size*y*y;
+//   float Iyy = sumXX - 2.0f*x*sumX + reg->size*x*x;
+//   float Ixy = sumXY - x*sumY - y*sumX + reg->size*x*y;
+//   
+//   Ixx /= reg->size;
+//   Iyy /= reg->size;
+//   Ixy /= reg->size;
+//   theta = 0.5f * atan2(-2.0f*Ixy, -Iyy + Ixx);
+//   theta += M_HPI;
+// 
+//   //length and width
+//   dx = cos(theta);
+//   dy = sin(theta);
+//   l_min = l_max = w_min = w_max = 0.0f;
+//   for(i=0; i<reg->size; i++)
+//   {
+//     l =  ((float)reg->xVals[i] - x) * dx + ((float)reg->yVals[i] - y) * dy;
+//     w = -((float)reg->xVals[i] - x) * dy + ((float)reg->yVals[i] - y) * dx;
+// 
+//     if( l > l_max ) l_max = l;
+//     if( l < l_min ) l_min = l;
+//     if( w > w_max ) w_max = w;
+//     if( w < w_min ) w_min = w;
+//   }
+//   
+//   //store values
+//   Rect* rec = new Rect;
+//   rec->x1 = x + l_min * dx;
+//   rec->y1 = y + l_min * dy;
+//   rec->x2 = x + l_max * dx;
+//   rec->y2 = y + l_max * dy;
+//   rec->width = w_max - w_min;
+//   rec->x = x;
+//   rec->y = y;
+//   rec->theta = theta;
+//   rec->dx = dx;
+//   rec->dy = dy;
+// 
+//   //we impose a minimal width of one pixel
+//   if( rec->width < 1.0f ) rec->width = 1.0f;
+//   
+//   return rec;
+// }
+
+
+
+
 LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
   float x,y,dx,dy,l,w,theta,l_min,l_max,w_min,w_max;
   int i;
-
-  //center of region using LS
-  int cx = 0;
-  int cy = 0;
-  for (i=0; i<reg->size; i++){
-    cx += reg->xVals[i];
-    cy += reg->yVals[i];
+  
+  //compute needed sums
+  int sumX=0, sumY=0, sumXX=0, sumYY=0, sumXY=0;
+  for(i=0; i<reg->size; i++)
+  {
+    sumYY += reg->yVals[i] * reg->yVals[i];
+    sumY += reg->yVals[i];
+    sumXY += reg->yVals[i] * reg->xVals[i];
+    sumXX += reg->xVals[i] * reg->xVals[i];
+    sumX += reg->xVals[i];
   }
-  x = (float)cx / (float)reg->size;
-  y = (float)cy / (float)reg->size;
 
-  //angle of region
-//   std::chrono::high_resolution_clock::time_point t1_1 = std::chrono::high_resolution_clock::now();
-//   for (int i=0; i<1000; i++){
-//     theta = getTheta(reg, x, y);
-//   }
-//   std::chrono::high_resolution_clock::time_point t1_2 = std::chrono::high_resolution_clock::now();
-//   
-//   std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
-//   for (int i=0; i<1000; i++){
-//     theta = getTheta2(reg, x, y);
-//   }
-//   std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
-//   
-//   std::chrono::high_resolution_clock::time_point t3_1 = std::chrono::high_resolution_clock::now();
-//   for (int i=0; i<1000; i++){
-//     theta = getTheta3(reg, x, y);
-//   }
-//   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
-//   
-//   std::chrono::high_resolution_clock::time_point t4_1 = std::chrono::high_resolution_clock::now();
-//   for (int i=0; i<1000; i++){
-//     theta = getTheta4(reg, x, y);
-//   }
-//   std::chrono::high_resolution_clock::time_point t4_2 = std::chrono::high_resolution_clock::now();
-//   
-//   long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
-//   std::cout << nano << " ";
-//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
-//   std::cout << nano << " ";
-//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t3_2-t3_1).count();
-//   std::cout << nano << " ";
-//   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t4_2-t4_1).count();
-//   std::cout << nano << std::endl;
   
-//   std::cout << getTheta(reg, x, y) << " ";
-//   std::cout << getTheta2(reg, x, y) << " ";
-//   std::cout << getTheta3(reg, x, y) << " ";
-//   std::cout << getTheta4(reg, x, y) << std::endl;
+  //center of region using LS
+  x = (float)sumX / (float)reg->size;
+  y = (float)sumY / (float)reg->size;
+
   
-  theta = getTheta4(reg, x, y);
+  //find angle of region
+  float Ixx = sumYY - 2.0f*y*sumY + reg->size*y*y;
+  float Iyy = sumXX - 2.0f*x*sumX + reg->size*x*x;
+  float Ixy = sumXY - x*sumY - y*sumX + reg->size*x*y;
+  
+  Ixx /= reg->size;
+  Iyy /= reg->size;
+  Ixy /= reg->size;
+  theta = 0.5f * atan2(-2.0f*Ixy, -Iyy + Ixx);
+  theta += M_HPI;
 
-  /* length and width:
-
-     'l' and 'w' are computed as the distance from the center of the
-     region to pixel i, projected along the rectangle axis (dx,dy) and
-     to the orthogonal axis (-dy,dx), respectively.
-
-     The length of the rectangle goes from l_min to l_max, where l_min
-     and l_max are the minimum and maximum values of l in the region.
-     Analogously, the width is selected from w_min to w_max, where
-     w_min and w_max are the minimum and maximum of w for the pixels
-     in the region.
-   */
+  //length and width
   dx = cos(theta);
   dy = sin(theta);
   l_min = l_max = w_min = w_max = 0.0f;
@@ -638,13 +764,13 @@ LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
   {
     l =  ((float)reg->xVals[i] - x) * dx + ((float)reg->yVals[i] - y) * dy;
     w = -((float)reg->xVals[i] - x) * dy + ((float)reg->yVals[i] - y) * dx;
-
+    
     if( l > l_max ) l_max = l;
     if( l < l_min ) l_min = l;
     if( w > w_max ) w_max = w;
     if( w < w_min ) w_min = w;
   }
-
+  
   //store values
   Rect* rec = new Rect;
   rec->x1 = x + l_min * dx;
@@ -663,6 +789,107 @@ LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
   
   return rec;
 }
+
+
+
+// LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
+//   float x,y,theta,l_min,l_max;
+//   int i;
+//   
+//   //compute needed sums
+//   int sumX=0, sumY=0, sumXX=0, sumYY=0, sumXY=0;
+//   for(i=0; i<reg->size; i++)
+//   {
+//     sumYY += reg->yVals[i] * reg->yVals[i];
+//     sumY += reg->yVals[i];
+//     sumXY += reg->yVals[i] * reg->xVals[i];
+//     sumXX += reg->xVals[i] * reg->xVals[i];
+//     sumX += reg->xVals[i];
+//   }
+// 
+//   
+//   //center of region using LS
+//   x = (float)sumX / (float)reg->size;
+//   y = (float)sumY / (float)reg->size;
+// 
+//   
+//   //find angle of region
+//   float Ixx = sumYY - 2.0f*y*sumY + reg->size*y*y;
+//   float Iyy = sumXX - 2.0f*x*sumX + reg->size*x*x;
+//   float Ixy = sumXY - x*sumY - y*sumX + reg->size*x*y;
+//   
+//   Ixx /= reg->size;
+//   Iyy /= reg->size;
+//   Ixy /= reg->size;
+//   theta = 0.5f * atan2(-2.0f*Ixy, -Iyy + Ixx);
+//   theta += M_HPI;
+// 
+//   
+//   //length variables
+//   int maxLX = reg->xVals[0];
+//   int maxLY = reg->yVals[0];
+//   int minLX = reg->xVals[0];
+//   int minLY = reg->yVals[0];
+//   
+//   //width variables
+//   int maxWY = reg->yVals[0];
+//   int minWY = reg->yVals[0];
+//   
+//   //find max/min length/width
+//   for(i=1; i<reg->size; i++)
+//   {
+//     if (reg->xVals[i] > maxLX){
+//       maxLX = reg->xVals[i];
+//       maxLY = reg->yVals[i];
+//     } else if (reg->xVals[i] < minLX){
+//       minLX = reg->xVals[i];
+//       minLY = reg->yVals[i];
+//     }
+//     
+//     if (reg->yVals[i] > maxWY){
+//       maxWY = reg->yVals[i];
+//     } else if (reg->yVals[i] < minWY){
+//       minWY = reg->yVals[i];
+//     }
+//   }
+//   
+//   //transform to proper coordinate frame
+//   float co = cos(theta);
+//   float si = sin(theta);
+//   l_min = (minLX - x)*co + (minLY - y)*si;
+//   l_max = (maxLX - x)*co + (maxLY - y)*si;
+//   
+//   
+//   //store values
+//   Rect* rec = new Rect;
+//   rec->x1 = x + l_min * co;
+//   rec->y1 = y + l_min * si;
+//   rec->x2 = x + l_max * co;
+//   rec->y2 = y + l_max * si;
+//   rec->width = maxWY - minWY;
+//   rec->x = x;
+//   rec->y = y;
+//   rec->theta = theta;
+//   rec->dx = co;
+//   rec->dy = si;
+//   
+//   std::cout << rec->x1 << " ";
+//   std::cout << rec->y1 << " ";
+//   std::cout << rec->x2 << " ";
+//   std::cout << rec->y2 << " ";
+//   std::cout << rec->width << " ";
+//   std::cout << rec->x << " ";
+//   std::cout << rec->y << " ";
+//   std::cout << rec->theta << " ";
+//   std::cout << rec->dx << " ";
+//   std::cout << rec->dy << std::endl;;
+// 
+//   //we impose a minimal width of one pixel
+//   if( rec->width < 1.0f ) rec->width = 1.0f;
+//   
+//   return rec;
+// }
+
 
 
 bool LsdLineFitter::refineRect(Rect* rec, Region* reg){
