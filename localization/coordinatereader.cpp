@@ -3,11 +3,10 @@
 
 CoordinateReader::CoordinateReader(char* filename){
   this->coordFile.open(filename);
-  this->currentCoords = new int[15];
+  this->currentCoords = new int[15]();
   
-  for (int i=0; i<15; i++){
-    currentCoords[i] = 0;
-  }
+  this->currentPos = new double[3]();
+  this->currentSonar = new int[4]();
 }
 
 
@@ -67,6 +66,39 @@ void CoordinateReader::updateCoordsFile(){
   std::cout << currentCoords[9] << ", " << currentCoords[10] << ", ";
   std::cout << currentCoords[12] << ", " << currentCoords[13] << std::endl;
   //*/
+}
+
+void CoordinateReader::updateCoordsFileNew(){  
+  long time;
+  double x, y, phi;
+  int w,nw,ne,e;
+  
+  coordFile >> time;
+  coordFile >> x >> y;
+  coordFile >> phi;
+  coordFile >> w >> nw >> ne >> e;
+  
+  if (coordFile.eof()){
+    currentPos[0] = 0.0;
+    currentPos[1] = 0.0;
+    currentPos[2] = 0.0;
+    currentSonar[0] = 0;
+    currentSonar[1] = 0;
+    currentSonar[2] = 0;
+    currentSonar[3] = 0;
+    return;
+  }
+  
+  double scale = 10.0;
+  
+  this->currentPos[0] = x/scale;
+  this->currentPos[1] = y/scale;
+  this->currentPos[2] = phi;
+  
+  this->currentSonar[0] = (int)round(w/scale);
+  this->currentSonar[1] = (int)round(nw/scale);
+  this->currentSonar[2] = (int)round(ne/scale);
+  this->currentSonar[3] = (int)round(e/scale);
 }
 
 
@@ -159,7 +191,29 @@ void CoordinateReader::getCurrentSonarDists(int* buffer){
 
 
 
+bool CoordinateReader::getCurrentPoseNew(double* buffer){
+  buffer[0] = currentPos[0];
+  buffer[1] = currentPos[1];
+  buffer[2] = currentPos[2];
+  
+  if (coordFile.eof()){
+    return false;
+  }
+  return true;
+}
 
+
+bool CoordinateReader::getCurrentSonarsNew(int* buffer){
+  buffer[0] = currentSonar[0];
+  buffer[1] = currentSonar[1];
+  buffer[2] = currentSonar[2];
+  buffer[3] = currentSonar[3];
+  
+  if (coordFile.eof()){
+    return false;
+  }
+  return true;
+}
 
 
 

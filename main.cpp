@@ -26,35 +26,15 @@ int main(int argc, char **argv) {
   char* sorImg = "/home/owner/pics/pics/refined.ppm";
   char* rawImg = "/home/owner/pics/pics/rawnav.ppm";
   char* navImg = "/home/owner/pics/pics/navigate.ppm";
-  //char* coordFile = "/home/owner/workspace/Datasets/output_ds3/coordsEstimate.txt";
   char* coordFile = (char*)argv[1];
   
   CoordinateReader* r = new CoordinateReader(coordFile);
-  
-  r->updateCoordsFile();  //use file for maps
-  
-  Localizer* l = new Localizer(r);
+  r->updateCoordsFileNew();
   
   SonarArchive* a = new SonarArchive();
   
-  int* drone = new int[3];
-  int* weson = new int[3];
-  int* eason = new int[3];
-  int* nwson = new int[3];
-  int* neson = new int[3];
-  bool* range = new bool[4];
-  float angle = 0.17;
-  double heading = 0.0;
-  double distX = 0.0;
-  double distY = 0.0;
-  double distA = 0.0;
-  double* prevLoc = new double[5];
-  double prevAngle = 0.0;
-  int* sonarDists = new int[4];
-  double* rawPos = new double[5];
-  
-  double XDrift = 0.0;
-  double YDrift = 0.0;
+  double* pose = new double[3];
+  int* sonars = new int[4];
   
   int index = 0;
   char* name = new char[256];
@@ -68,37 +48,15 @@ int main(int argc, char **argv) {
   
   
   /////Normal main loop /////
-  //for (int i=0; i<750; i++) r->updateCoordsFile();
+//   for (int i=0; i<223; i++) r->updateCoordsFile();
   for (int i=0; i<3000; i++){
     //std::cout << "---- " << i << " ----" << std::endl;
-    l->triggerUpdate();
     
-    l->getPosition(drone);
-    l->getWSonarPosition(weson);
-    l->getESonarPosition(eason);
-    l->getNWSonarPosition(nwson);
-    l->getNESonarPosition(neson);
-    l->getSonarInRange(range);
-    
-    l->getRawSonarDists(sonarDists);
-    l->getRawPosition(rawPos);
-    distX += sqrt((rawPos[0]-prevLoc[0])*(rawPos[0]-prevLoc[0]));
-    distY += sqrt((rawPos[1]-prevLoc[1])*(rawPos[1]-prevLoc[1]));
-    prevLoc[0] = rawPos[0];
-    prevLoc[1] = rawPos[1];
-    
-    double angle1 = atan2(nwson[1]-drone[1], nwson[0]-drone[0]);
-    double angle2 = atan2(neson[1]-drone[1], neson[0]-drone[0]);
-    heading = (angle1 + angle2)/2.0;
-    if (prevAngle == 0.0) prevAngle = heading;
-    distA += sqrt((heading-prevAngle)*(heading-prevAngle));
-    //angle = distA/1000.0 + 0.25;    //0.25
-    angle = 0.17;
-    angle = 0.27;
-    prevAngle = heading;
+    r->getCurrentPoseNew(pose);
+    r->getCurrentSonarsNew(sonars);
     
     t1_1 = std::chrono::high_resolution_clock::now();
-    a->addSonarScan(sonarDists, rawPos[0], rawPos[1], distX/100.0, distY/100.0, heading, angle);
+    a->addSonarScan(sonars, pose[0], pose[1], pose[2]);
     t1_2 = std::chrono::high_resolution_clock::now();
     t1 += std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
     
@@ -111,16 +69,17 @@ int main(int argc, char **argv) {
 //       delete loopmap;
 //     }
     
-    r->updateCoordsFile(); //*/
-    
+    r->updateCoordsFileNew();
   }
   
+  a->generateMap(0.27f)->sendToImage(occImg,0,0);
+  return 0;
 //   std::cout << "Bananan\n";
 //   return 0;
   
   ///std::cout << "Generating occupancy grid..." << std::endl;
   std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
-  OccupancyGrid* orig = a->generateMap();
+  OccupancyGrid* orig = a->generateMap(0.27f);
   std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
   ////orig->sendToImage(navImg, 0,0);
   
@@ -175,7 +134,7 @@ int main(int argc, char **argv) {
   
   delete orig;
   std::chrono::high_resolution_clock::time_point t5_1 = std::chrono::high_resolution_clock::now();
-  orig = a->generateMap();
+  orig = a->generateMap(0.27f);
   std::chrono::high_resolution_clock::time_point t5_2 = std::chrono::high_resolution_clock::now();
   ////orig->sendToImage(sorImg, 0,0);
   
