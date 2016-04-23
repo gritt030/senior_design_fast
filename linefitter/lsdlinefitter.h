@@ -21,6 +21,7 @@ public:
   static const unsigned char UNDEFINED = LsdGrid::UNDEFINED;
   static const unsigned char DEFINED = LsdGrid::DEFINED;
   static const int LENGTH = 10;
+  static const int HATCH = 65;
   static const int BLUR = 1;
   
   //detection parameters
@@ -46,6 +47,7 @@ public:
   void detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newGrid);
   
   void sendLsdToImage(char* filename);
+  void sendLsdUsedToImage(char* filename);
   void setLsdImagePixel(PPMwriter* w, unsigned char value);
   
   
@@ -73,6 +75,7 @@ private:
   
 private:
   LsdGrid* lsdimage = nullptr;
+  LsdGrid* lsdused = nullptr;
   
   unsigned char ALIGNED_THRESH_CHAR;
   float ALIGNED_THRESH_FLOAT;
