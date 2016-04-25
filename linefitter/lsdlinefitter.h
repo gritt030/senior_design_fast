@@ -43,11 +43,8 @@ public:
   void setImage(Grid* input);
   
   void detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGrid);
-  void detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newGrid);
-  void detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newGrid);
   
   void sendLsdToImage(char* filename);
-  void sendLsdUsedToImage(char* filename);
   void setLsdImagePixel(PPMwriter* w, unsigned char value);
   
   
@@ -75,7 +72,6 @@ private:
   
 private:
   LsdGrid* lsdimage = nullptr;
-  LsdGrid* lsdused = nullptr;
   
   unsigned char ALIGNED_THRESH_CHAR;
   float ALIGNED_THRESH_FLOAT;
@@ -86,12 +82,10 @@ private:
   
   Region* regionGrow(int x, int y);
   bool isAligned(float angle1, float angle2);
-  float getTheta(Region* reg, float x, float y);
-  float getTheta2(Region* reg, float x, float y);
-  float getTheta3(Region* reg, float x, float y);
-  float getTheta4(Region* reg, float x, float y);
   Rect* regionToRect(Region* reg);
   bool refineRect(Rect* rec, Region* reg);
+  
+  float fast_atan2(float y, float x);
   
   void blurImageX();
   void blurImageY();

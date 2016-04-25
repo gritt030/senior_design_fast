@@ -2,7 +2,6 @@
 #define PPM_WRITER_H
 
 #include <iostream>
-#include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <string.h>

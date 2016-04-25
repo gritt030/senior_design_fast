@@ -164,7 +164,6 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
   long long draw = 0;
   
   std::chrono::high_resolution_clock::time_point tL_1, tL_2;
-//   lsdused = new LsdGrid(LSD_GRID_SIZE);
   
   std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
   for (int i=MIN_Y; i<MAX_Y; i++){
@@ -189,12 +188,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
       rect += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
       tL_1 = std::chrono::high_resolution_clock::now();
-        bool refined = refineRect(curRect, curRegion);
-//         if (!refined) {
-//           delete curRect;
-//         deleteRegion(curRegion);
-//         continue;
-//         }
+        refineRect(curRect, curRegion);
       tL_2 = std::chrono::high_resolution_clock::now();
       refine += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
@@ -240,16 +234,6 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
               y = (x - curRect->x1) * slope + curRect->y1;
             }
             
-            
-            
-//             for (int p=0; p<curRegion->size; p++){
-//           lsdused->setValue(curRegion->xVals[p], curRegion->yVals[p], DEFINED);
-//         }
-            
-            
-            
-            
-          
           //vertical lines
           } else if (isAligned(curRect->theta, 1.570796327f)){
             dx = curRect->x2 - curRect->x1;
@@ -266,13 +250,6 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
               y += cy;
               x = (y - curRect->y1) * slope + curRect->x1;
             }
-            
-            
-            
-            
-//             for (int p=0; p<curRegion->size; p++){
-//           lsdused->setValue(curRegion->xVals[p], curRegion->yVals[p], DEFINED);
-//         }
             
           //region is not aligned to cardinal direction
           } else {
@@ -305,152 +282,7 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
   std::cout << scale << " ";
   std::cout << dist << " ";
   std::cout << draw << std::endl;
-  
-//   this->sendLsdUsedToImage("/home/owner/pics/pics/lsdafter.ppm");
 }
-
-
-void LsdLineFitter::detectLineSegmentsX(OccupancyGrid* grid, OccupancyGrid* newGrid){
-  this->inimage = grid->grid;
-  
-  this->generateLsdImage();
-  
-  unsigned char curVal;
-  Region* curRegion;
-  Rect* curRect;
-  
-  float curLen;
-  float dx, cx, dy, cy;
-  float slope, x, y;
-    
-  for (int i=MIN_Y; i<MAX_Y; i++){
-    for (int j=MIN_X; j<MAX_X; j++){
-      curVal = this->lsdimage->map[i*LSD_GRID_SIZE + j];
-      
-      if (curVal != UNDEFINED){
-        curRegion = regionGrow(j,i);
-        curRect = regionToRect(curRegion);
-        refineRect(curRect, curRegion);
-        
-        if (SCALE != 1.0f) {
-          (curRect->x) /= SCALE;
-          (curRect->y) /= SCALE;
-          (curRect->x1) /= SCALE;
-          (curRect->x2) /= SCALE;
-          (curRect->y1) /= SCALE;
-          (curRect->y2) /= SCALE;
-          (curRect->width) /= SCALE;
-          (curRect->dx) /= SCALE;
-          (curRect->dy) /= SCALE;
-        }
-        
-        curLen = DIST(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
-        
-        if (curLen >= LENGTH){
-          //horizontal lines
-          if (isAligned(curRect->theta, 0.0f)){
-            dx = curRect->x2 - curRect->x1;
-            cx = dx/fabs(dx);
-            dy = curRect->y2 - curRect->y1;
-            cy = dy/fabs(dy);
-            slope = dy/dx;
-                      
-            x = curRect->x1;
-            y = curRect->y1;
-            
-            for (int l=0; l<=abs(dx); l++){
-              newGrid->grid->setValue((int)x, (int)y, (char)-10);
-              x += cx;
-              y = (x - curRect->x1) * slope + curRect->y1;
-            }
-            
-          //region is not aligned to cardinal direction
-          } else {
-            for (int k=0; k<curRegion->size; k++){
-              lsdimage->setValue(curRegion->xVals[k],curRegion->yVals[k], DEFINED);
-            }
-          }
-        }
-          
-        delete curRect;
-        deleteRegion(curRegion);
-      }
-    }
-  }
-}
-
-
-void LsdLineFitter::detectLineSegmentsY(OccupancyGrid* grid, OccupancyGrid* newGrid){
-  this->inimage = grid->grid;
-  
-  this->generateLsdImage();
-  this->sendLsdToImage("/home/owner/pics/pics/lsd.ppm");
-  
-  unsigned char curVal;
-  Region* curRegion;
-  Rect* curRect;
-  
-  float curLen;
-  float dx, cx, dy, cy;
-  float slope, x, y;
-    
-  for (int i=MIN_Y; i<MAX_Y; i++){
-    for (int j=MIN_X; j<MAX_X; j++){
-      curVal = this->lsdimage->map[i*LSD_GRID_SIZE + j];
-      
-      if (curVal != UNDEFINED){
-        curRegion = regionGrow(j,i);
-        curRect = regionToRect(curRegion);
-        refineRect(curRect, curRegion);
-        
-        if (SCALE != 1.0f) {
-          (curRect->x) /= SCALE;
-          (curRect->y) /= SCALE;
-          (curRect->x1) /= SCALE;
-          (curRect->x2) /= SCALE;
-          (curRect->y1) /= SCALE;
-          (curRect->y2) /= SCALE;
-          (curRect->width) /= SCALE;
-          (curRect->dx) /= SCALE;
-          (curRect->dy) /= SCALE;
-        }
-        
-        curLen = DIST(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
-        
-        if (curLen >= LENGTH){
-          //vertical lines
-          if (isAligned(curRect->theta, 1.570796327f)){
-            dx = curRect->x2 - curRect->x1;
-            cx = dx/fabs(dx);
-            dy = curRect->y2 - curRect->y1;
-            cy = dy/fabs(dy);
-            slope = dx/dy;
-            
-            x = curRect->x1;
-            y = curRect->y1;
-            
-            for (int l=0; l<=abs(dy); l++){
-              newGrid->grid->setValue((int)x, (int)y, (char)-10);
-              y += cy;
-              x = (y - curRect->y1) * slope + curRect->x1;
-            }
-            
-          //region is not aligned to cardinal direction
-          } else {
-            for (int k=0; k<curRegion->size; k++){
-              lsdimage->setValue(curRegion->xVals[k],curRegion->yVals[k], DEFINED);
-            }
-          }
-        }
-          
-        delete curRect;
-        deleteRegion(curRegion);
-      }
-    }
-  }
-}
-
-
 
 
 //grow a rectangular region
@@ -527,40 +359,29 @@ bool LsdLineFitter::isAligned(float angle1, float angle2){
 }
 
 
-float LsdLineFitter::getTheta(Region* reg, float x, float y){
-  float lambda,theta;
-  float Ixx = 0.0f;
-  float Iyy = 0.0f;
-  float Ixy = 0.0f;
-  int i;
 
-  //compute inertia matrix
+LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
+  float x,y,theta;
+  int i;
+  
+  //compute needed sums
+  int sumX=0, sumY=0;
   for(i=0; i<reg->size; i++)
   {
-    Ixx += ((float)reg->yVals[i] - y) * ((float)reg->yVals[i] - y);
-    Iyy += ((float)reg->xVals[i] - x) * ((float)reg->xVals[i] - x);
-    Ixy -= ((float)reg->xVals[i] - x) * ((float)reg->yVals[i] - y);
+    sumX += reg->xVals[i];
+    sumY += reg->yVals[i];
   }
-  
-  //compute smallest eigenvalue
-  lambda = 0.5f * ( Ixx + Iyy - sqrt( (Ixx-Iyy)*(Ixx-Iyy) + 4.0f*Ixy*Ixy ) );
-  
-  //compute angle
-  theta = fabs(Ixx)>fabs(Iyy) ? atan2(lambda-Ixx,Ixy) : atan2(Ixy,lambda-Iyy);
-  
-  //make positive
-  if (theta < 0.0f) theta += M_PI;
-  
-  return theta;
-}
 
+  
+  //center of region using LS
+  x = (float)sumX / (float)reg->size;
+  y = (float)sumY / (float)reg->size;
 
-float LsdLineFitter::getTheta2(Region* reg, float x, float y){
-  float theta;
+  
+  //find angle of region
   float Ixx = 0.0f;
   float Iyy = 0.0f;
   float Ixy = 0.0f;
-  int i;
 
   //compute inertia matrix
   for(i=0; i<reg->size; i++)
@@ -573,210 +394,7 @@ float LsdLineFitter::getTheta2(Region* reg, float x, float y){
   Ixx /= reg->size;
   Iyy /= reg->size;
   Ixy /= reg->size;
-  theta = 0.5 * atan2(-2*Ixy, -Iyy + Ixx);
-  theta += M_HPI;
-  
-  return theta;
-}
-
-
-float LsdLineFitter::getTheta3(Region* reg, float x, float y){
-  float theta;
-  int Ixx = 0;
-  int Iyy = 0;
-  int Ixy = 0;
-  int i;
-  int cx = (int)round(x);
-  int cy = (int)round(y);
-
-  //compute inertia matrix
-  for(i=0; i<reg->size; i++)
-  {
-    Ixx += (reg->yVals[i] - cy) * (reg->yVals[i] - cy);
-    Iyy += (reg->xVals[i] - cx) * (reg->xVals[i] - cx);
-    Ixy += (reg->xVals[i] - cx) * (reg->yVals[i] - cy);
-  }
-  
-  float mxx = (float)Ixx / (float)reg->size;
-  float myy = (float)Iyy / (float)reg->size;
-  float mxy = (float)Ixy / (float)reg->size;
-  theta = 0.5 * atan2(-2*mxy, -myy + mxx);
-  theta += M_HPI;
-  
-  return theta;
-}
-
-//BEST ONE
-float LsdLineFitter::getTheta4(Region* reg, float x, float y){
-  float theta;
-  int syy = 0;
-  int sxx = 0;
-  int sy = 0;
-  int sx = 0;
-  int sxy = 0;
-  int i;
-
-  //compute inertia matrix
-  for(i=0; i<reg->size; i++)
-  {
-    syy += reg->yVals[i] * reg->yVals[i];
-    sy += reg->yVals[i];
-    sxy += reg->yVals[i] * reg->xVals[i];
-    sxx += reg->xVals[i] * reg->xVals[i];
-    sx += reg->xVals[i];
-  }
-  
-  float Ixx = syy - 2.0f*y*sy + reg->size*y*y;
-  float Iyy = sxx - 2.0f*x*sx + reg->size*x*x;
-  float Ixy = sxy - x*sy - y*sx + reg->size*x*y;
-  
-  Ixx /= reg->size;
-  Iyy /= reg->size;
-  Ixy /= reg->size;
-  theta = 0.5f * atan2(-2.0f*Ixy, -Iyy + Ixx);
-  theta += M_HPI;
-  
-  return theta;
-}
-
-
-// LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
-//   float x,y,dx,dy,l,w,theta,l_min,l_max,w_min,w_max;
-//   int i;
-//   
-//   //compute needed sums
-//   int sumX=0, sumY=0, sumXX=0, sumYY=0, sumXY=0;
-//   for(i=0; i<reg->size; i++)
-//   {
-//     sumYY += reg->yVals[i] * reg->yVals[i];
-//     sumY += reg->yVals[i];
-//     sumXY += reg->yVals[i] * reg->xVals[i];
-//     sumXX += reg->xVals[i] * reg->xVals[i];
-//     sumX += reg->xVals[i];
-//   }
-// 
-//   //center of region using LS
-//   x = (float)sumX / (float)reg->size;
-//   y = (float)sumY / (float)reg->size;
-// 
-//   //angle of region
-// //   std::chrono::high_resolution_clock::time_point t1_1 = std::chrono::high_resolution_clock::now();
-// //   for (int i=0; i<1000; i++){
-// //     theta = getTheta(reg, x, y);
-// //   }
-// //   std::chrono::high_resolution_clock::time_point t1_2 = std::chrono::high_resolution_clock::now();
-// //   
-// //   std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
-// //   for (int i=0; i<1000; i++){
-// //     theta = getTheta2(reg, x, y);
-// //   }
-// //   std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
-// //   
-// //   std::chrono::high_resolution_clock::time_point t3_1 = std::chrono::high_resolution_clock::now();
-// //   for (int i=0; i<1000; i++){
-// //     theta = getTheta3(reg, x, y);
-// //   }
-// //   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
-// //   
-// //   std::chrono::high_resolution_clock::time_point t4_1 = std::chrono::high_resolution_clock::now();
-// //   for (int i=0; i<1000; i++){
-// //     theta = getTheta4(reg, x, y);
-// //   }
-// //   std::chrono::high_resolution_clock::time_point t4_2 = std::chrono::high_resolution_clock::now();
-// //   
-// //   long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
-// //   std::cout << nano << " ";
-// //   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
-// //   std::cout << nano << " ";
-// //   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t3_2-t3_1).count();
-// //   std::cout << nano << " ";
-// //   nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t4_2-t4_1).count();
-// //   std::cout << nano << std::endl;
-//   
-// //   std::cout << getTheta(reg, x, y) << " ";
-// //   std::cout << getTheta2(reg, x, y) << " ";
-// //   std::cout << getTheta3(reg, x, y) << " ";
-// //   std::cout << getTheta4(reg, x, y) << std::endl;
-//   
-// //   theta = getTheta4(reg, x, y);
-//   
-//   //find theta
-//   float Ixx = sumYY - 2.0f*y*sumY + reg->size*y*y;
-//   float Iyy = sumXX - 2.0f*x*sumX + reg->size*x*x;
-//   float Ixy = sumXY - x*sumY - y*sumX + reg->size*x*y;
-//   
-//   Ixx /= reg->size;
-//   Iyy /= reg->size;
-//   Ixy /= reg->size;
-//   theta = 0.5f * atan2(-2.0f*Ixy, -Iyy + Ixx);
-//   theta += M_HPI;
-// 
-//   //length and width
-//   dx = cos(theta);
-//   dy = sin(theta);
-//   l_min = l_max = w_min = w_max = 0.0f;
-//   for(i=0; i<reg->size; i++)
-//   {
-//     l =  ((float)reg->xVals[i] - x) * dx + ((float)reg->yVals[i] - y) * dy;
-//     w = -((float)reg->xVals[i] - x) * dy + ((float)reg->yVals[i] - y) * dx;
-// 
-//     if( l > l_max ) l_max = l;
-//     if( l < l_min ) l_min = l;
-//     if( w > w_max ) w_max = w;
-//     if( w < w_min ) w_min = w;
-//   }
-//   
-//   //store values
-//   Rect* rec = new Rect;
-//   rec->x1 = x + l_min * dx;
-//   rec->y1 = y + l_min * dy;
-//   rec->x2 = x + l_max * dx;
-//   rec->y2 = y + l_max * dy;
-//   rec->width = w_max - w_min;
-//   rec->x = x;
-//   rec->y = y;
-//   rec->theta = theta;
-//   rec->dx = dx;
-//   rec->dy = dy;
-// 
-//   //we impose a minimal width of one pixel
-//   if( rec->width < 1.0f ) rec->width = 1.0f;
-//   
-//   return rec;
-// }
-
-
-
-LsdLineFitter::Rect* LsdLineFitter::regionToRect(Region* reg){
-  float x,y,theta;
-  int i;
-  
-  //compute needed sums
-  int sumX=0, sumY=0, sumXX=0, sumYY=0, sumXY=0;
-  for(i=0; i<reg->size; i++)
-  {
-    sumYY += reg->yVals[i] * reg->yVals[i];
-    sumY += reg->yVals[i];
-    sumXY += reg->yVals[i] * reg->xVals[i];
-    sumXX += reg->xVals[i] * reg->xVals[i];
-    sumX += reg->xVals[i];
-  }
-
-  
-  //center of region using LS
-  x = (float)sumX / (float)reg->size;
-  y = (float)sumY / (float)reg->size;
-
-  
-  //find angle of region
-  float Ixx = sumYY - 2.0f*y*sumY + reg->size*y*y;
-  float Iyy = sumXX - 2.0f*x*sumX + reg->size*x*x;
-  float Ixy = sumXY - x*sumY - y*sumX + reg->size*x*y;
-  
-  Ixx /= reg->size;
-  Iyy /= reg->size;
-  Ixy /= reg->size;
-  theta = 0.5f * atan2(-2.0f*Ixy, -Iyy + Ixx);
+  theta = 0.5 * fast_atan2(-2*Ixy, -Iyy + Ixx);
   theta += M_HPI;
   
   
@@ -932,6 +550,29 @@ void LsdLineFitter::blurImageY(){
 }
 
 
+float LsdLineFitter::fast_atan2(float y, float x){
+  float t, val;
+  if ((fabs(x) < 0.000001f) && (fabs(y) < 0.000001f)) return 0.0f;
+  else if ( x == 0.0f ) t = 1.570796327f;
+  else {
+    val = fabs(y/x);
+  
+    if (val < 1.0f){
+      t = val/(1.0f + 0.28f*val*val);
+    } else {
+      t = 1.570796327f - val/(val*val + 0.28f);
+    }
+  }
+  
+  if (x>=0) {
+    if (y<0) t = -t;
+  }
+  else if (y<0) t = t-3.14192654;
+  else t = 3.14192654-t;
+  return t;
+}
+
+
 
 
 
@@ -948,23 +589,6 @@ void LsdLineFitter::sendLsdToImage(char* filename){
   for (int i=0; i<size; i++){
     for (int j=0; j<size; j++) {
       unsigned char cur = lsdimage->getValue(j, i);
-      setLsdImagePixel(w, cur);
-    }
-  }
-  
-  w->output_image();
-  delete w;
-}
-
-void LsdLineFitter::sendLsdUsedToImage(char* filename){
-  PPMwriter* w = new PPMwriter();
-  int size = this->lsdused->GRID_SIZE;
-  
-  w->create_image(filename, size, size);
-  
-  for (int i=0; i<size; i++){
-    for (int j=0; j<size; j++) {
-      unsigned char cur = lsdused->getValue(j, i);
       setLsdImagePixel(w, cur);
     }
   }

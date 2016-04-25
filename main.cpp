@@ -19,13 +19,17 @@
 #include "ppmwriter/ppm_writer.h"
 
 
-int main(int argc, char **argv) {  
+int main(int argc, char **argv) {
   if (argc != 2) {std::cout << "More args please!\n"; return 0;}
   
   char* occImg = "/home/owner/pics/pics/occupancy.ppm";
   char* sorImg = "/home/owner/pics/pics/refined.ppm";
   char* rawImg = "/home/owner/pics/pics/rawnav.ppm";
   char* navImg = "/home/owner/pics/pics/navigate.ppm";
+//   char* occImg = "/data/ftp/internal_000/senior_design/images/occupancy.ppm";
+//   char* sorImg = "/data/ftp/internal_000/senior_design/images/refined.ppm";
+//   char* rawImg = "/data/ftp/internal_000/senior_design/images/rawnav.ppm";
+//   char* navImg = "/data/ftp/internal_000/senior_design/images/navigate.ppm";
   char* coordFile = (char*)argv[1];
   
   CoordinateReader* r = new CoordinateReader(coordFile);
