@@ -400,6 +400,24 @@ void OccupancyGrid::sendToImage(char* filename, int x, int y){
   PPMwriter* w = new PPMwriter();
   int size = Grid::GRID_SIZE;
   
+  x += BOUNDARY;
+  y = BOUNDARY - y;
+  grid->setValue(x,y, -Grid::MAX_VALUE);
+  grid->setValue(x,y+1, -Grid::MAX_VALUE);
+  grid->setValue(x,y-1, -Grid::MAX_VALUE);
+  grid->setValue(x+1,y, -Grid::MAX_VALUE);
+  grid->setValue(x-1,y, -Grid::MAX_VALUE);
+  grid->setValue(x+1,y+1, -Grid::MAX_VALUE);
+  grid->setValue(x+1,y-1, -Grid::MAX_VALUE);
+  grid->setValue(x-1,y+1, -Grid::MAX_VALUE);
+  grid->setValue(x-1,y-1, -Grid::MAX_VALUE);
+  grid->setValue(x+2,y, -Grid::MAX_VALUE);
+  grid->setValue(x,y+2, -Grid::MAX_VALUE);
+  grid->setValue(x-2,y, -Grid::MAX_VALUE);
+  grid->setValue(x,y-2, -Grid::MAX_VALUE);
+  
+  
+  
   w->create_image(filename, size, size);
   
   for (int i=0; i<Grid::GRID_SIZE; i++){

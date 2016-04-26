@@ -108,7 +108,7 @@ void LsdLineFitter::generateLsdImage(){
 //   this->sendLsdToImage("/home/owner/pics/pics/lsdmake.ppm");
   this->blurImageX();
   this->blurImageY();
-  crosshatchLsdImage();
+//   crosshatchLsdImage();
 //   this->sendLsdToImage("/home/owner/pics/pics/lsdblur.ppm");
 }
 

@@ -20,7 +20,7 @@
 
 
 int main(int argc, char **argv) {
-  if (argc != 2) {std::cout << "More args please!\n"; return 0;}
+  if (argc < 2) {std::cout << "More args please!\n"; return 0;}
   
   char* occImg = "/home/owner/pics/pics/occupancy.ppm";
   char* sorImg = "/home/owner/pics/pics/refined.ppm";
@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
 //   char* rawImg = "/data/ftp/internal_000/senior_design/images/rawnav.ppm";
 //   char* navImg = "/data/ftp/internal_000/senior_design/images/navigate.ppm";
   char* coordFile = (char*)argv[1];
+  char* outputFile = (char*)argv[2];
   
   CoordinateReader* r = new CoordinateReader(coordFile);
   r->updateCoordsFileNew();
@@ -59,6 +60,9 @@ int main(int argc, char **argv) {
     
     test = r->getCurrentPoseNew(pose);
     r->getCurrentSonarsNew(sonars);
+//     int w = sonars[0];
+//     sonars[0] = sonars[3];
+//     sonars[3] = w;
     if (!test) break;
     
     t1_1 = std::chrono::high_resolution_clock::now();
@@ -75,17 +79,28 @@ int main(int argc, char **argv) {
 //       delete loopmap;
 //     }
     
+    
+// //     if (i%10 == 0){
+//     sprintf(name, "/home/owner/pics/pics/sequence/p%06d.pgm", i);
+//     OccupancyGrid* obb = a->generateMap(0.27f);
+//     obb->sendToImage(name, pose[0]/10, pose[1]/10);
+//     delete obb;
+// //     }
+    
+    
+    
+    
     r->updateCoordsFileNew();
   }
-  
-//   std::cout << "Bananan\n";
-//   return 0;
+  std::cout << "Okay...\n";
+
   
   ///std::cout << "Generating occupancy grid..." << std::endl;
   std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
   OccupancyGrid* orig = a->generateMap(0.27f);
   std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
   ////orig->sendToImage(navImg, 0,0);
+  
   
   std::chrono::high_resolution_clock::time_point t3_1 = std::chrono::high_resolution_clock::now();
   std::vector<int>* xPos = new std::vector<int>();
@@ -97,7 +112,7 @@ int main(int argc, char **argv) {
   delete xPos;
   delete yPos;
   std::chrono::high_resolution_clock::time_point t3_2 = std::chrono::high_resolution_clock::now();
-    
+  
 /*
   char* fname = new char[128]();
   for (int i=1; i<=20; i+=1){
@@ -143,6 +158,7 @@ int main(int argc, char **argv) {
   ////orig->sendToImage(sorImg, 0,0);
   
   
+  
   std::chrono::high_resolution_clock::time_point t6_1 = std::chrono::high_resolution_clock::now();
   OccupancyGrid* o1 = new OccupancyGrid();
   orig->getWallMap(o1);
@@ -159,6 +175,10 @@ int main(int argc, char **argv) {
   //lsd->detectLineSegmentsX(o1, o2);
   lsd->detectLineSegments(o1, o2);
   std::chrono::high_resolution_clock::time_point t7_2 = std::chrono::high_resolution_clock::now();
+  
+  o2->sendToImage(occImg, 0,0);
+  std::cout << "Bananan\n";
+  return 0;
   
 //   delete o1;
 //   o1 = new OccupancyGrid();

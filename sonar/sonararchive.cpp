@@ -107,6 +107,13 @@ OccupancyGrid* SonarArchive::generateMap(float sliceAngle){
     
     if (current->e < SONAR_MAX) output->closeSlice(x, y, x+buf[6], y+buf[7], sliceAngle);
     else output->openSlice(x, y, x+buf[6], y+buf[7], sliceAngle);
+    
+//     //TODO: Front sonars, don't use
+//     if (current->nw < SONAR_MAX) output->closeSlice(x, y, x+buf[2], y+buf[3], sliceAngle);
+//     else output->openSlice(x, y, x+buf[2], y+buf[3], sliceAngle);
+//     
+//     if (current->ne < SONAR_MAX) output->closeSlice(x, y, x+buf[4], y+buf[5], sliceAngle);
+//     else output->openSlice(x, y, x+buf[4], y+buf[5], sliceAngle);
 
     current = current->next;
   }
