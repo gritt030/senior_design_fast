@@ -46,53 +46,7 @@ void HoughTransform::performHoughTransform(){
   for (int i=0; i<numPoints; i++){
     this->houghGrid->addHoughPoint(xPos[i], yPos[i]);
   }
-  
-//   int max = this->numPoints / RANDOM_DIV;
-//   int i,j;
-//   char cur;
-//   
-//   for (int count=0; count<max; count++){
-//     i = rand() % numPoints;
-//     this->houghGrid->addHoughPoint(xPos[i], yPos[i]);
-//     numpts++;
-//   }
-  
-//   char cur;
-//   //generate hough transform grid
-//   for (int i=0; i<Grid::GRID_SIZE; i++){
-//     for (int j=0; j<Grid::GRID_SIZE; j++){
-//       cur = this->grid->grid->map[i*Grid::GRID_SIZE + j];
-//       if (cur < 0) this->houghGrid->addHoughPoint(j,i);
-//     }
-//   }
 }
-
-
-
-int HoughTransform::testRand(int div){
-  this->RANDOM_DIV = div;
-  this->numpts = 0;
-  
-  delete this->houghGrid;
-  this->houghGrid = new HoughGrid();
-  
-  this->performHoughTransform();
-  
-  int size = HoughGrid::THETA_SIZE;
-  
-  //generate sums for each theta value from 0 to 180
-  int* hist = new int[size]();
-  this->houghGrid->getThetaPeaks(hist);
-  
-  for (int i=0; i<size; i++){
-    std::cout << hist[i] << " ";
-  }
-  std::cout << ", " << numpts;
-  std::cout << std::endl;
-  
-  delete[] hist;
-}
-
 
 
 
@@ -101,25 +55,6 @@ void HoughTransform::performHoughPeaks(){
   for (int i=0; i<numPoints; i++){
     this->houghPeak->addHoughPoint(xPos[i], yPos[i]);
   }
-  
-//   int max = this->numPoints / RANDOM_DIV;
-//   int i,j;
-//   char cur;
-//   
-//   for (int count=0; count<max; count++){
-//     i = rand() % numPoints;
-//     this->houghPeak->addHoughPoint(xPos[i], yPos[i]);
-//     numpts++;
-//   }
-  
-//   char cur;
-//   //generate hough transform grid
-//   for (int i=0; i<Grid::GRID_SIZE; i++){
-//     for (int j=0; j<Grid::GRID_SIZE; j++){
-//       cur = this->grid->grid->map[i*Grid::GRID_SIZE + j];
-//       if (cur < 0) this->houghPeak->addHoughPoint(j,i);
-//     }
-//   }
 }
 
 

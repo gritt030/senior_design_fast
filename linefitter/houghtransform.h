@@ -18,10 +18,7 @@ public:
   
   float getYCardinal();
   float getXCardinal();
-  
-  int RANDOM_DIV = 1;
-  int testRand(int div);
-    
+      
 private:
   float X_Cardinal, Y_Cardinal;
   bool isDone = false;

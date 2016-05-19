@@ -24,6 +24,7 @@ class Grid {
     
     //set and get values in grid
     void setValue(int x, int y, char value);
+    void setOpenValue(int x, int y);
     void changeValue(int x, int y, char value);
     bool thresholdOpenValue(int x, int y);
     char getValue(int x, int y);

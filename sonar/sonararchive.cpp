@@ -43,6 +43,15 @@ void SonarArchive::addSonarScan(int* sonarDists, float x, float y, float head){
   scan->rotHeading = head;
   scan->next = nullptr;
   
+  if (scan->w < SONAR_WALL) scan->wWall = true;
+  else if (scan->w > SIDE_CLIP) scan->w = SIDE_CLIP;
+  
+  if (scan->e < SONAR_WALL) scan->eWall = true;
+  else if (scan->e > SIDE_CLIP) scan->e = SIDE_CLIP;
+  
+  if (scan->nw > FRONT_CLIP) scan->nw = FRONT_CLIP;
+  if (scan->ne > FRONT_CLIP) scan->ne = FRONT_CLIP;
+  
   //add sonar scan to list
   this->lastScan->next = scan;
   this->lastScan = scan;
@@ -93,6 +102,7 @@ OccupancyGrid* SonarArchive::generateMap(float sliceAngle){
   OccupancyGrid* output = new OccupancyGrid();
   int* buf = new int[8];
   int x, y;
+  int i;
   
   SonarScan* current = this->scanList->next;
   
@@ -102,18 +112,25 @@ OccupancyGrid* SonarArchive::generateMap(float sliceAngle){
     
     this->getSonarCoords(current, buf);
     
-    if (current->w < SONAR_MAX) output->closeSlice(x, y, x+buf[0], y+buf[1], sliceAngle);
+    //left sonar
+    if (current->wWall) output->closeSlice(x, y, x+buf[0], y+buf[1], sliceAngle);
     else output->openSlice(x, y, x+buf[0], y+buf[1], sliceAngle);
-    
-    if (current->e < SONAR_MAX) output->closeSlice(x, y, x+buf[6], y+buf[7], sliceAngle);
+
+    //right sonar
+    if (current->eWall) output->closeSlice(x, y, x+buf[6], y+buf[7], sliceAngle);
     else output->openSlice(x, y, x+buf[6], y+buf[7], sliceAngle);
+
+    //front sonars
+    output->openSliceFull(x, y, x+buf[2], y+buf[3], sliceAngle);
+    output->openSliceFull(x, y, x+buf[4], y+buf[5], sliceAngle);
     
-//     //TODO: Front sonars, don't use
-//     if (current->nw < SONAR_MAX) output->closeSlice(x, y, x+buf[2], y+buf[3], sliceAngle);
-//     else output->openSlice(x, y, x+buf[2], y+buf[3], sliceAngle);
-//     
-//     if (current->ne < SONAR_MAX) output->closeSlice(x, y, x+buf[4], y+buf[5], sliceAngle);
-//     else output->openSlice(x, y, x+buf[4], y+buf[5], sliceAngle);
+    //current position of bebop
+    x -= 4;
+    y -= 4;
+    for (i=0; i<9; i++){
+      output->openLineFull(x,y,x+8,y);
+      y += 1;
+    }
 
     current = current->next;
   }

@@ -2,6 +2,7 @@
 #ifndef SONARARCHIVE_H
 #define SONARARCHIVE_H
 
+#include <cstdlib>
 #include <cmath>
 
 #include "./../occupancygrid/occupancygrid.h"
@@ -10,7 +11,9 @@ class SonarArchive
 {
 public:
   static const int SCALE = 10;  //number of cm per grid square
-  static const int SONAR_MAX = 325;    //maximum range on sonar (not based on scale)
+  static const int SONAR_WALL = 225;    //maximum range on sonar (not based on scale)
+  static const int FRONT_CLIP = 100;    //maximum range of front sonars
+  static const int SIDE_CLIP = 150;
   
   SonarArchive();
   ~SonarArchive();
@@ -24,6 +27,7 @@ private:
   typedef struct SonarScan
   {
     unsigned short w, nw, ne, e;    //sonar distances
+    bool wWall, eWall;
     float x, y;                     //position readings were made at
     float rotX, rotY;               //position after rotation
     float heading;                  //direction facing during measurements

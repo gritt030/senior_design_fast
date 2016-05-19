@@ -246,6 +246,107 @@ bool OccupancyGrid::openLine(int relX1, int relY1, int relX2, int relY2){
 }//*/
 
 
+// Optimized grid version
+void OccupancyGrid::openLineFull(int relX1, int relY1, int relX2, int relY2){
+  //information on how we need to move
+  int x = relX1;                //position variables
+  int y = relY1;
+  int signX, signY;             //sign of movement direction
+  int deltaX = relX2 - relX1;   //distance we need to move
+  int deltaY = relY2 - relY1;
+    
+  //special cases are handled here
+  //single point
+  if ((deltaX == 0) && (deltaY == 0)) {
+    grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+    return;
+    
+  //vertical line
+  } else if (deltaX == 0) {
+    signY = deltaY/abs(deltaY);
+    
+    for (int i=0; i<abs(deltaY); i++) {
+      grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+      y += signY;
+    }
+    grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+    return;
+    
+  //horizontal line
+  } else if (deltaY == 0) {
+    int signX = deltaX/abs(deltaX);
+    
+    for (int i=0; i<abs(deltaX); i++) {
+      grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+      x += signX;
+    }
+    grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+    return;
+  }
+  
+  //switch to absolute value coordinates to make things easier
+  signX = deltaX/abs(deltaX);
+  signY = deltaY/abs(deltaY);
+  deltaX = abs(deltaX);
+  deltaY = abs(deltaY);
+  
+  //SPECIAL CASE: diagonal line
+  if (deltaY == deltaX) {
+    for (int i=0; i<deltaX; i++) {
+      grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+      x += signX;
+      y += signY;
+    }
+    grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+    return;
+  }
+  
+  //change in x and y so far
+  int cx=deltaY>>1, cy=deltaX>>1;
+  
+  //line more horizontal than vertical
+  if (deltaX > deltaY) {
+    for (int i=0; i<deltaX; i++) {
+      //fill in current grid square
+      grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+      
+      //see if we need to move vertically
+      cy += deltaY;
+      if (cy > deltaX) {
+        y += signY;
+        cy -= deltaX;
+        grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+      }
+      
+      //move horizontally
+      x += signX;
+    }
+    
+  //line more vertical than horizontal
+  } else {
+    for (int i=0; i<deltaY; i++) {
+      //fill in current grid square
+      grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+      
+      //see if we need to move horizontally
+      cx += deltaX;
+      if (cx > deltaY) {
+        x += signX;
+        cx -= deltaY;
+        grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+      }
+      
+      //move vertically
+      y += signY;
+    }
+  }
+  
+  //set last point in line
+  grid->setOpenValue(BOUNDARY+x, BOUNDARY-y);
+  return;
+}//*/
+
+
 
 
 
@@ -416,8 +517,6 @@ void OccupancyGrid::sendToImage(char* filename, int x, int y){
   grid->setValue(x-2,y, -Grid::MAX_VALUE);
   grid->setValue(x,y-2, -Grid::MAX_VALUE);
   
-  
-  
   w->create_image(filename, size, size);
   
   for (int i=0; i<Grid::GRID_SIZE; i++){
@@ -535,6 +634,95 @@ void OccupancyGrid::openSlice(int relX1, int relY1, int relX2, int relY2, float 
 }
 
 
+
+void OccupancyGrid::openSliceFull(int relX1, int relY1, int relX2, int relY2, float angle){
+  //information on how we need to move
+  int deltaX = relX2 - relX1;   //distance we need to move
+  int deltaY = relY2 - relY1;
+  int dist = (int)round(sqrt(deltaX*deltaX + deltaY*deltaY)*tan(angle));  //perpendicular distance along one leg
+  
+  //special cases are handled here
+  //single point
+  if ((deltaX == 0) && (deltaY == 0)) {
+    this->openLineFull(relX1, relY1, relX2, relY2);
+    return;
+    
+  //vertical line passed in
+  } else if (deltaX == 0) {
+    for (int i=-dist; i<=dist; i++) {
+      this->openLineFull(relX1, relY1, relX2+i, relY2);
+    }
+    return;
+    
+  //horizontal line passed in
+  } else if (deltaY == 0) {
+    for (int i=-dist; i<=dist; i++) {
+      this->openLineFull(relX1, relY1, relX2, relY2+i);
+    }
+    return;
+  }
+  
+  //get slope we're moving at
+  float slope = -(float)deltaX/(float)deltaY;
+
+  //for block size
+  deltaX = abs(deltaX);
+  deltaY = abs(deltaY);
+  
+  //amount we need to change x and y by to get ends of line
+  int changeX = (int)round(sqrt((float)(dist*dist) / (1.0+slope*slope)));
+  int changeY = (int)round(sqrt((float)(dist*dist) / (1.0+1.0/(slope*slope))) * (slope/fabs(slope)));
+  
+  //starting and ending points of line
+  int startX = relX2 - changeX;
+  int startY = relY2 - changeY;
+  int x = startX;
+  int y = startY;
+  
+  //used to determine how to move
+  int ySign;
+  int block;
+  
+  //how many times we perform the loop for
+  int loop;
+  if (deltaX > deltaY){
+    loop = abs(changeY)<<1;
+    block = deltaX;
+  }
+  else {
+    loop = changeX<<1;
+    block = deltaY;
+  }
+  
+  if (slope < 0) ySign = -1;
+  else ySign = 1;
+  
+  //keep track of pixel transitions
+  int cx = block>>1;
+  int cy = block>>1;
+    
+  this->openLineFull(relX1, relY1, x, y);
+  
+  do {
+    cx += deltaY;
+    cy += deltaX;
+    if (cx > block) {
+      x++;
+      cx -= block;
+    }
+    
+    if (cy > block) {
+      y += ySign;
+      cy -= block;
+    }
+    
+    //std::cout <<x<<","<<y<<std::endl;
+    this->openLineFull(relX1, relY1, x, y);
+  } while (loop-- > 0);
+}
+
+
+
 void OccupancyGrid::closeSlice(int relX1, int relY1, int relX2, int relY2, float angle){
   //information on how we need to move
   int deltaX = relX2 - relX1;   //distance we need to move
@@ -624,19 +812,6 @@ void OccupancyGrid::closeSlice(int relX1, int relY1, int relX2, int relY2, float
 
 //blur the map in the x direction
 void OccupancyGrid::blurMapX(int uncertainty){
-  //TODO:make sure uncertainty is not too small/large
-//   if (uncertainty < 1) return;
-//  
-//   //uncertainty is too large, iterate for equivalent kernel
-//   else if (uncertainty > this->NUM_KERNELS) {
-//     int unc2 = uncertainty*uncertainty;
-//     int num2 = this->NUM_KERNELS * this->NUM_KERNELS;
-//     int blur2 = (int)(round(sqrt(unc2 - num2)));
-//     
-//     this->blurMapX(this->NUM_KERNELS);
-//     this->blurMapX(blur2);
-//     return;
-//   }
   
   const int* kernel = this->KERNELS[uncertainty-1];
   const int kernelSum = this->KERNEL_SUMS[uncertainty-1];
@@ -669,19 +844,6 @@ void OccupancyGrid::blurMapX(int uncertainty){
 
 //blur the map in the y direction
 void OccupancyGrid::blurMapY(int uncertainty){
-  //TODO:make sure uncertainty is not too small/large
-//   if (uncertainty < 1) return;
-//   
-//   //uncertainty is too large, iterate for equivalent kernel
-//   else if (uncertainty > this->NUM_KERNELS) {
-//     int unc2 = uncertainty*uncertainty;
-//     int num2 = this->NUM_KERNELS * this->NUM_KERNELS;
-//     int blur2 = (int)(round(sqrt(unc2 - num2)));
-//     
-//     this->blurMapY(this->NUM_KERNELS);
-//     this->blurMapY(blur2);
-//     return;
-//   }
   
   const int* kernel = this->KERNELS[uncertainty-1];
   const int kernelSum = this->KERNEL_SUMS[uncertainty-1];

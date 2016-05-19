@@ -1,3 +1,2 @@
-add_library(localizer  ./localizer.cpp
-                       ./coordinatereader.cpp
+add_library(localizer ./coordinatereader.cpp
                             )

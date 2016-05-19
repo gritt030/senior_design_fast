@@ -102,13 +102,11 @@ void LsdLineFitter::generateLsdImage(){
   MAX_Y++;
   
   MIN_REG_SIZE = (int)(-(5.0f*log10(size) + 1.041392685f) / log10(ANG_TH/180.0f));
-//   MIN_REG_SIZE = 0;
-  //std::cout << MIN_REG_SIZE << std::endl;
   
 //   this->sendLsdToImage("/home/owner/pics/pics/lsdmake.ppm");
   this->blurImageX();
   this->blurImageY();
-//   crosshatchLsdImage();
+  crosshatchLsdImage();
 //   this->sendLsdToImage("/home/owner/pics/pics/lsdblur.ppm");
 }
 
@@ -142,10 +140,8 @@ void LsdLineFitter::crosshatchLsdImage(){
 void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGrid){
   this->inimage = grid->grid;
   
-  std::chrono::high_resolution_clock::time_point t1_1 = std::chrono::high_resolution_clock::now();
   this->generateLsdImage();
   //this->sendLsdToImage("/home/owner/pics/pics/lsd.ppm");
-  std::chrono::high_resolution_clock::time_point t1_2 = std::chrono::high_resolution_clock::now();
   
   unsigned char curVal;
   Region* curRegion;
@@ -154,45 +150,21 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
   float curLen;
   float dx, cx, dy, cy;
   float slope, x, y;
-  
-  long long access = 0;
-  long long grow = 0;
-  long long rect = 0;
-  long long refine = 0;
-  long long scale = 0;
-  long long dist = 0;
-  long long draw = 0;
-  
-  std::chrono::high_resolution_clock::time_point tL_1, tL_2;
-  
-  std::chrono::high_resolution_clock::time_point t2_1 = std::chrono::high_resolution_clock::now();
+
   for (int i=MIN_Y; i<MAX_Y; i++){
     for (int j=MIN_X; j<MAX_X; j++){
-      tL_1 = std::chrono::high_resolution_clock::now();
       curVal = this->lsdimage->map[i*LSD_GRID_SIZE + j];
-      tL_2 = std::chrono::high_resolution_clock::now();
-      access += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
       
       if (curVal != UNDEFINED){
-      tL_1 = std::chrono::high_resolution_clock::now();
         curRegion = regionGrow(j,i);
-      tL_2 = std::chrono::high_resolution_clock::now();
-      grow += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
         //reject small regions
         if (curRegion->size < MIN_REG_SIZE) continue;
-        
-      tL_1 = std::chrono::high_resolution_clock::now();
+
         curRect = regionToRect(curRegion);
-      tL_2 = std::chrono::high_resolution_clock::now();
-      rect += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
-        
-      tL_1 = std::chrono::high_resolution_clock::now();
+
         refineRect(curRect, curRegion);
-      tL_2 = std::chrono::high_resolution_clock::now();
-      refine += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
-        
-      tL_1 = std::chrono::high_resolution_clock::now();
+
         if (SCALE != 1.0f) {
           (curRect->x) /= SCALE;
           (curRect->y) /= SCALE;
@@ -204,18 +176,8 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
           (curRect->dx) /= SCALE;
           (curRect->dy) /= SCALE;
         }
-      tL_2 = std::chrono::high_resolution_clock::now();
-      scale += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
-        
-        
-      tL_1 = std::chrono::high_resolution_clock::now();
         curLen = DIST(curRect->x1, curRect->y1, curRect->x2, curRect->y2);
-      tL_2 = std::chrono::high_resolution_clock::now();
-      dist += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
-        
-        
-      tL_1 = std::chrono::high_resolution_clock::now();
         if (curLen >= LENGTH){
           //horizontal lines
           if (isAligned(curRect->theta, 0.0f)){
@@ -258,8 +220,6 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
             }
           }
         }
-      tL_2 = std::chrono::high_resolution_clock::now();
-      draw += std::chrono::duration_cast<std::chrono::nanoseconds>(tL_2-tL_1).count();
         
         
         delete curRect;
@@ -267,21 +227,6 @@ void LsdLineFitter::detectLineSegments(OccupancyGrid* grid, OccupancyGrid* newGr
       }
     }
   }
-  std::chrono::high_resolution_clock::time_point t2_2 = std::chrono::high_resolution_clock::now();
-  
-  
-  //genimg loop access grow rect refine scale dist draw
-  long long nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t1_2-t1_1).count();
-  std::cout << nano << " ";
-  nano = std::chrono::duration_cast<std::chrono::nanoseconds>(t2_2-t2_1).count();
-  std::cout << nano << " ";
-  std::cout << access << " ";
-  std::cout << grow << " ";
-  std::cout << rect << " ";
-  std::cout << refine << " ";
-  std::cout << scale << " ";
-  std::cout << dist << " ";
-  std::cout << draw << std::endl;
 }
 
 

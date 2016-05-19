@@ -37,11 +37,13 @@ class OccupancyGrid {
     ~OccupancyGrid();
     
     //functions for adding to map
-    bool openLine(int relX1, int relY1, int relX2, int relY2); //TODO: make this private
+    bool openLine(int relX1, int relY1, int relX2, int relY2);
+    void openLineFull(int relX1, int relY1, int relX2, int relY2);
     void closeLine(int relX1, int relY1, int relX2, int relY2);
     
     //functions for adding sonar slices to map
     void openSlice(int relX1, int relY1, int relX2, int relY2, float angle);
+    void openSliceFull(int relX1, int relY1, int relX2, int relY2, float angle);
     void closeSlice(int relX1, int relY1, int relX2, int relY2, float angle);
     
     //blur the map according to uncertainty
