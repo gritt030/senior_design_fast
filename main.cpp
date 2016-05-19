@@ -21,12 +21,11 @@ int main(int argc, char **argv) {
   
   char* occImg = "/home/owner/pics/pics/occupancy.ppm";
   char* sorImg = "/home/owner/pics/pics/refined.ppm";
-  char* rawImg = "/home/owner/pics/pics/rawnav.ppm";
-  char* navImg = "/home/owner/pics/pics/navigate.ppm";
+  char* navImg = "/home/owner/pics/pics/straightened.ppm";
 //   char* occImg = "/data/ftp/internal_000/senior_design/images/occupancy.ppm";
 //   char* sorImg = "/data/ftp/internal_000/senior_design/images/refined.ppm";
 //   char* rawImg = "/data/ftp/internal_000/senior_design/images/rawnav.ppm";
-//   char* navImg = "/data/ftp/internal_000/senior_design/images/navigate.ppm";
+//   char* navImg = "/data/ftp/internal_000/senior_design/images/straightened.ppm";
   char* coordFile = (char*)argv[1];
   char* outputFile = (char*)argv[2];
   
@@ -51,10 +50,12 @@ int main(int argc, char **argv) {
     r->getCurrentSonarsNew(sonars);
     if (!test) break;
     
+    ///////////////////////////////////////////////////////
     //w and e sonars are flipped on walter library datasets
     int w = sonars[0];
     sonars[0] = sonars[3];
     sonars[3] = w;
+    //////////////////////////////////////////////////////
     
     //add scan to collection
     a->addSonarScan(sonars, pose[0], pose[1], pose[2]);
@@ -98,6 +99,14 @@ int main(int argc, char **argv) {
 
   //send lsd map to image
   o2->sendToImage(sorImg, 0,0);
+  
+  //clean up everything
+  delete o1;
+  delete o2;
+  delete orig;
+  delete lsd;
+  delete hough;
+  delete a;
   
   std::cout << "Done!" << std::endl;
   return 0;
